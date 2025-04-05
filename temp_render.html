@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>p5.js Animation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ccapture.js@1.1.0/build/CCapture.all.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: black;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      let phase = 0;
+let totalFrames = 300; // 5 seconds at 60 fps
+let transitionFrames = 60;
+let arrowLengths = [];
+let equations = ["y = mx + c"];
+let canvasCenter;
+
+function setup() {
+  createCanvas(800, 600);
+  textFont('Georgia');
+  textSize(40);
+  canvasCenter = createVector(width / 2, height / 2);
+
+  // Pre-calculate arrow lengths
+  for (let i = 0; i < 5; i++) {
+    arrowLengths.push(random(80, 150));
+  }
+}
+
+function draw() {
+  background(0);
+  let progress = frameCount / totalFrames;
+
+  if (frameCount <= totalFrames) {
+    showTitle(progress);
+    showArrows(progress);
+    showEquation(progress);
+  }
+  
+  if (frameCount >= totalFrames) {
+    noLoop(); // Stop the animation after the final phase
+  }
+}
+
+function showTitle(progress) {
+  let alpha = constrain(map(progress, 0, 1, 0, 255), 0, 255);
+  fill(255, alpha);
+  textAlign(CENTER);
+  text('Linear Algebra', canvasCenter.x, 100);
+}
+
+function showArrows(progress) {
+  let startPhase = 0.2;
+  let endPhase = 0.8;
+  if (progress > startPhase) {
+    push();
+    translate(canvasCenter.x, canvasCenter.y);
+    stroke(255);
+    strokeWeight(3);
+
+    let currentPhase = constrain(map(progress, startPhase, endPhase, 0, 1), 0, 1);
+    rotate(currentPhase * TWO_PI / 5);
+
+    for (let i = 0; i < 5; i++) {
+      let angle = map(i, 0, 5, 0, TWO_PI);
+      drawArrow(angle, arrowLengths[i] * sin(currentPhase * PI));
+    }
+    pop();
+  }
+}
+
+function drawArrow(angle, length) {
+  push();
+  rotate(angle);
+  line(0, 0, length, 0);
+  line(length, 0, length - 10, 5);
+  line(length, 0, length - 10, -5);
+  pop();
+}
+
+function showEquation(progress) {
+  let startPhase = 0.6;
+  let endPhase = 1.0;
+  if (progress > startPhase) {
+    let currentPhase = constrain(map(progress, startPhase, endPhase, 0, 1), 0, 1);
+    let alpha = currentPhase * 255;
+    
+    fill(255, alpha);
+    noStroke();
+    textSize(30);
+    textAlign(CENTER);
+    for (let i = 0; i < equations.length; i++) {
+      text(equations[i], canvasCenter.x, canvasCenter.y + 200 + i * 40);
+    }
+  }
+}
+    </script>
+  </body>
+</html>

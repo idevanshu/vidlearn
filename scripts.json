@@ -1,0 +1,56 @@
+[
+  {
+    "id": "segment_001",
+    "voice_script": "Linear algebra is a branch of mathematics focusing on vectors and linear equations.",
+    "animation": "Show the words 'Linear Algebra' with vectors as arrows and a simple linear equation like y=mx+c on a blackboard.",
+    "duration": 5
+  },
+  {
+    "id": "segment_002",
+    "voice_script": "Vectors are mathematical objects that have magnitude and direction.",
+    "animation": "Display an arrow in space with labels pointing at its length and its orientation.",
+    "duration": 4
+  },
+  {
+    "id": "segment_003",
+    "voice_script": "In two dimensions, vectors can be represented as a pair of numbers, denoting their position on the x and y axes.",
+    "animation": "Show a 2D grid, then plot a vector with coordinates (3, 4) as a red arrow.",
+    "duration": 5
+  },
+  {
+    "id": "segment_004",
+    "voice_script": "Vectors are crucial for defining spaces known as vector spaces.",
+    "animation": "Illustrate multiple arrows originating from a single point, spreading in different directions within a space.",
+    "duration": 4
+  },
+  {
+    "id": "segment_005",
+    "voice_script": "Matrices are grids of numbers that can represent linear transformations and systems of equations.",
+    "animation": "Show a 3x3 matrix as a table of numbers next to a grid, then shift and scale the grid using the matrix.",
+    "duration": 6
+  },
+  {
+    "id": "segment_006",
+    "voice_script": "Matrix multiplication combines linear transformations into a single operation.",
+    "animation": "Illustrate two matrices multiplying, resulting in a new matrix, and animate a grid being transformed twice rapidly.",
+    "duration": 6
+  },
+  {
+    "id": "segment_007",
+    "voice_script": "Determinants of matrices can tell us if a matrix transformation is invertible.",
+    "animation": "Show a matrix with a calculated determinant; if greater than zero, show an arrow indicating 'invertible'.",
+    "duration": 5
+  },
+  {
+    "id": "segment_008",
+    "voice_script": "Eigenvectors and eigenvalues characterize how a transformation scales vectors in specific directions.",
+    "animation": "Animate a grid with arrows; highlight one arrow that stretches and label it with its eigenvalue.",
+    "duration": 6
+  },
+  {
+    "id": "segment_009",
+    "voice_script": "Linear algebra is widely used in computer graphics, data science, and machine learning.",
+    "animation": "Show examples of a 3D model transforming, a data plot, and a neural network, all linked to linear algebra elements.",
+    "duration": 7
+  }
+]
