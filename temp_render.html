@@ -17,90 +17,97 @@
   <body>
     <script>
       let phase = 0;
-let totalFrames = 300; // 5 seconds at 60 fps
-let transitionFrames = 60;
-let arrowLengths = [];
-let equations = ["y = mx + c"];
-let canvasCenter;
+let totalFrames = 420;
+let gridLinesPhaseEnd = 140;
+let engineerPhaseEnd = 280;
 
 function setup() {
   createCanvas(800, 600);
-  textFont('Georgia');
-  textSize(40);
-  canvasCenter = createVector(width / 2, height / 2);
-
-  // Pre-calculate arrow lengths
-  for (let i = 0; i < 5; i++) {
-    arrowLengths.push(random(80, 150));
-  }
+  frameRate(60);
 }
 
 function draw() {
   background(0);
-  let progress = frameCount / totalFrames;
-
-  if (frameCount <= totalFrames) {
-    showTitle(progress);
-    showArrows(progress);
-    showEquation(progress);
-  }
   
-  if (frameCount >= totalFrames) {
-    noLoop(); // Stop the animation after the final phase
+  if (frameCount <= gridLinesPhaseEnd) {
+    drawGridLinesScene();
+  } else if (frameCount <= engineerPhaseEnd) {
+    drawEngineerScene();
+  } else {
+    drawNeuralNetScene();
+  }
+
+  if (frameCount == totalFrames) {
+    noLoop();
   }
 }
 
-function showTitle(progress) {
-  let alpha = constrain(map(progress, 0, 1, 0, 255), 0, 255);
-  fill(255, alpha);
-  textAlign(CENTER);
-  text('Linear Algebra', canvasCenter.x, 100);
-}
-
-function showArrows(progress) {
-  let startPhase = 0.2;
-  let endPhase = 0.8;
-  if (progress > startPhase) {
-    push();
-    translate(canvasCenter.x, canvasCenter.y);
-    stroke(255);
-    strokeWeight(3);
-
-    let currentPhase = constrain(map(progress, startPhase, endPhase, 0, 1), 0, 1);
-    rotate(currentPhase * TWO_PI / 5);
-
-    for (let i = 0; i < 5; i++) {
-      let angle = map(i, 0, 5, 0, TWO_PI);
-      drawArrow(angle, arrowLengths[i] * sin(currentPhase * PI));
-    }
-    pop();
-  }
-}
-
-function drawArrow(angle, length) {
+function drawGridLinesScene() {
+  let alpha = map(frameCount, 0, gridLinesPhaseEnd, 0, 255);
+  
   push();
-  rotate(angle);
-  line(0, 0, length, 0);
-  line(length, 0, length - 10, 5);
-  line(length, 0, length - 10, -5);
+  stroke(255, alpha);
+  for (let x = 0; x <= width; x += 40) {
+    line(x, 0, x, height);
+  }
+  for (let y = 0; y <= height; y += 40) {
+    line(0, y, width, y);
+  }
+  pop();
+  
+  fill(255, alpha);
+  textSize(24);
+  textAlign(CENTER, CENTER);
+  text("Computer-Generated Image", width / 2, height - 50);
+}
+
+function drawEngineerScene() {
+  let alphaIn = map(frameCount, gridLinesPhaseEnd, gridLinesPhaseEnd + 30, 0, 255);
+  let alphaOut = map(frameCount, engineerPhaseEnd - 30, engineerPhaseEnd, 255, 0);
+
+  push();
+  stroke(205, alphaIn);
+  fill(255, alphaIn);
+  drawBlueprint();
+  fill(255, alphaIn);
+  textSize(24);
+  textAlign(CENTER, CENTER);
+  text("Engineer with Blueprint Graphics", width / 2, height - 50);
   pop();
 }
 
-function showEquation(progress) {
-  let startPhase = 0.6;
-  let endPhase = 1.0;
-  if (progress > startPhase) {
-    let currentPhase = constrain(map(progress, startPhase, endPhase, 0, 1), 0, 1);
-    let alpha = currentPhase * 255;
-    
-    fill(255, alpha);
-    noStroke();
-    textSize(30);
-    textAlign(CENTER);
-    for (let i = 0; i < equations.length; i++) {
-      text(equations[i], canvasCenter.x, canvasCenter.y + 200 + i * 40);
+function drawBlueprint() {
+  stroke(100, 255, 200);
+  noFill();
+  beginShape();
+  vertex(200, 180);
+  vertex(300, 150);
+  vertex(600, 200);
+  endShape();
+}
+
+function drawNeuralNetScene() {
+  let alphaIn = map(frameCount, engineerPhaseEnd, engineerPhaseEnd + 30, 0, 255);
+
+  stroke(100, 255, 100, alphaIn);
+  for (let i = 1; i <= 5; i++) {
+    let yOffset = i * 100;
+    for (let j = 1; j <= i; j++) {
+      drawNeuralNode((width / 5) * j, yOffset, alphaIn);
     }
   }
+
+  fill(255, alphaIn);
+  textSize(24);
+  textAlign(CENTER, CENTER);
+  text("Neural Network Visualization", width / 2, height - 50);
+}
+
+function drawNeuralNode(x, y, alpha) {
+  push();
+  fill(100, 255, 0, alpha);
+  ellipse(x, y, 20, 20);
+  pop();
 }
     </script>
   </body>

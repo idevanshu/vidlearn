@@ -4,10 +4,11 @@ from jinja2 import Template
 from pathlib import Path
 import asyncio
 from pyppeteer import launch
+import os
 
 from prompts import script_system_prompt, animation_system_prompt
 
-openai_api = "your-api-key-here"
+openai_api = "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"
 
 client = OpenAI(api_key = openai_api)
 
@@ -63,40 +64,40 @@ def generate_html(js_code, output_html_path="temp_render.html"):
     Path(output_html_path).write_text(rendered_html, encoding="utf-8")
     return output_html_path
 
+import asyncio
+import base64
+from pathlib import Path
+from pyppeteer import launch
+
 async def record_animation(html_path, segment_id, duration=10):
     CHROME_PATH = "C:/Program Files/Google/Chrome/Application/chrome.exe"
+
     browser = await launch(
         headless=True,
         executablePath=CHROME_PATH,
         args=["--no-sandbox"]
     )
-    
+
     try:
         page = await browser.newPage()
-        
-        # Enable console logging from the browser
         page.on('console', lambda msg: print(f'BROWSER LOG: {msg.text}'))
-        
+
         await page.goto(f"file://{str(Path(html_path).absolute())}")
-        print("Page loaded")
-        
+        print("✅ Page loaded")
+
         await page.waitForSelector("canvas")
-        print("Canvas found")
-        
-        # Test if basic evaluation works
-        result = await page.evaluate("console.log('Hello from pyppeteer'); true;")
-        print(f"Simple JS result: {result}")
-        
-        # Set up window.onerror to catch JavaScript errors
+        print("✅ Canvas found")
+
+        # Set up error logging
         await page.evaluate("""
-        window.onerror = function(message, source, lineno, colno, error) {
-            console.error('JavaScript error:', message, 'at line', lineno, ':', error);
-            return true;
-        };
+            window.onerror = function(message, source, lineno, colno, error) {
+                console.error('JavaScript error:', message, 'at line', lineno, ':', error);
+                return true;
+            };
         """)
-        
-        print("Setting up CCapture...")
-        # Create capture object
+
+        print("🎥 Setting up CCapture and base64 blob handling...")
+
         await page.evaluate(f"""
             try {{
                 const capturer = new CCapture({{
@@ -109,15 +110,22 @@ async def record_animation(html_path, segment_id, duration=10):
                 let frameCount = 0;
                 const maxFrames = {duration * 60};
 
+                window.blobBase64 = null;
+
                 function captureFrame() {{
                     capturer.capture(document.querySelector('canvas'));
                     frameCount++;
+
                     if (frameCount >= maxFrames) {{
                         capturer.stop();
                         capturer.save(function(blob) {{
-                            const file = new File([blob], "{segment_id}.webm", {{ type: "video/webm" }});
-                            saveAs(file);
-                            console.log("✅ Saved as {segment_id}.webm");
+                            const reader = new FileReader();
+                            reader.onloadend = function() {{
+                                const base64Data = reader.result.split(',')[1]; // strip data URI
+                                window.blobBase64 = base64Data;
+                                console.log("✅ Blob base64 ready.");
+                            }};
+                            reader.readAsDataURL(blob);
                         }});
                     }} else {{
                         requestAnimationFrame(captureFrame);
@@ -128,15 +136,36 @@ async def record_animation(html_path, segment_id, duration=10):
             }} catch (e) {{
                 console.error("Capture setup error:", e);
             }}
-            """)
-        
-        print(f"Waiting {duration + 5} seconds for recording to complete...")
+        """)
+
+        # Wait for animation + blob to be ready
+        print(f"🕒 Waiting {duration + 5} seconds for recording...")
         await asyncio.sleep(duration + 5)
-        print("Wait completed")
-        
+
+        # Wait until blob is populated
+        for i in range(10):
+            ready = await page.evaluate("window.blobBase64 !== null")
+            if ready:
+                break
+            await asyncio.sleep(1)
+
+        if not ready:
+            raise RuntimeError("❌ Timed out waiting for blob base64.")
+
+        # Retrieve and decode base64
+        base64_str = await page.evaluate("window.blobBase64")
+        video_data = base64.b64decode(base64_str)
+
+        # Save to segments/ folder
+        out_path = Path("segments") / f"{segment_id}.webm"
+        out_path.parent.mkdir(exist_ok=True)
+        out_path.write_bytes(video_data)
+        print(f"✅ Video saved to {out_path}")
+
     finally:
         await browser.close()
-        print("Browser closed")
+        print("🚪 Browser closed")
+
 
 import subprocess
 from pathlib import Path
@@ -161,37 +190,81 @@ def merge_with_ffmpeg(video_path, audio_path, output_path):
     except subprocess.CalledProcessError as e:
         print("❌ FFmpeg failed:", e)
 
+def merge_videos(folder_path, output_path):
+    folder = Path(folder_path).resolve()  # Make absolute path
+    video_files = sorted(folder.glob("segment_*.mp4"))
+
+    if not video_files:
+        print("❌ No .mp4 files found in folder.")
+        return
+
+    concat_file = folder / "concat_list.txt"
+
+    # Use absolute paths in list file
+    with open(concat_file, "w", encoding="utf-8") as f:
+        for file in video_files:
+            f.write(f"file '{file.as_posix()}'\n")
+
+    # Build FFmpeg command
+    command = [
+        "ffmpeg", "-y",
+        "-f", "concat",
+        "-safe", "0",
+        "-i", str(concat_file),
+        "-c", "copy",
+        str(Path(output_path).resolve())
+    ]
+
+    try:
+        subprocess.run(command, check=True)
+        print(f"✅ Merged into {output_path}")
+    except subprocess.CalledProcessError as e:
+        print("❌ FFmpeg failed to stitch videos:", e)
+
+def safe_parse_json(gpt_output):
+    try:
+        # Strip code fences if present
+        if gpt_output.startswith("```json"):
+            gpt_output = gpt_output.strip()[7:-3].strip()  # remove ```json and ending ```
+        elif gpt_output.startswith("```"):
+            gpt_output = gpt_output.strip()[3:-3].strip()
+
+        return json.loads(gpt_output)
+    except json.JSONDecodeError as e:
+        print("❌ JSON parsing failed:", e)
+        return None
 
 if __name__ == "__main__":
     
 
     user_prompt = "explain linear algebra"
 
-    script = generate_response(script_system_prompt , user_prompt)
+    # script = generate_response(script_system_prompt , user_prompt)
 
-    with open("scripts.json") as f:
-        script = json.load(f)
+    # script = safe_parse_json(script)
 
-    for segments in script:
-        segment_id = segments["id"]
-        voiceover = segments["voice_script"]
-        animation = segments["animation"]
-        duration = segments["duration"]
+    # for segments in script:
+    #     segment_id = segments["id"]
+    #     voiceover = segments["voice_script"]
+    #     animation = segments["animation"]
+    #     duration = segments["duration"]
 
-        animation_prompt = f"{animation} to last atleast {duration} seconds"
+    #     animation_prompt = f"{animation} to last atleast {duration} seconds"
 
-        animation_code = generate_response(animation_system_prompt , animation_prompt)
+    #     animation_code = generate_response(animation_system_prompt , animation_prompt)
 
-        animation_code = extract_js_code(animation_code)
+    #     animation_code = extract_js_code(animation_code)
 
-        html_path = generate_html(animation_code)
+    #     html_path = generate_html(animation_code)
 
-        asyncio.run(
-            record_animation(html_path, segment_id, duration)
-        )
+    #     asyncio.run(
+    #         record_animation(html_path, segment_id, duration)
+    #     )
 
-        generate_voice(f"voice/{segment_id}.mp3" , voiceover)
+    #     generate_voice(f"voice/{segment_id}.mp3" , voiceover)
 
-        merge_with_ffmpeg( f"segments/{segment_id}.webm", f"voice/{segment_id}.mp3" , f"final_videos/{segment_id}.mp4")
+    #     merge_with_ffmpeg( f"segments/{segment_id}.webm", f"voice/{segment_id}.mp3" , f"final_videos/{segment_id}.mp4")
 
-        break
+    #     print("Done with: ", segment_id)
+    
+    merge_videos("final_videos", "output.mp4" )
