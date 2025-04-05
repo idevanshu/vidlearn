@@ -16,96 +16,74 @@
   </head>
   <body>
     <script>
-      let startTime;
-let duration = 360; // 6 seconds at 60 FPS
-let transitionFrames = 60;
+      let startFrame;
+let textAlpha = 0;
+let stopwatchAngle = 0;
+let nodeYpositions = [300, 350, 400];
+let nodeXpositions = [200, 300, 400];
+let nodesOpacity = [0, 0, 0];
 
 function setup() {
   createCanvas(800, 600);
-  startTime = frameCount;
-  noStroke();
-  textFont('Arial');
-  textAlign(CENTER, CENTER);
+  startFrame = frameCount;
 }
 
 function draw() {
   background(0);
-  let elapsed = frameCount - startTime;
-
-  // Phase 1: Chairs and Table Formation
-  if (elapsed < transitionFrames) {
-    let t = map(elapsed, 0, transitionFrames, 0, 1);
-    drawTableAndChairs(t);
-  } else {
-    drawTableAndChairs(1);
-
-    // Phase 2: Participants Slide In
-    if (elapsed < transitionFrames * 2) {
-      let t = map(elapsed, transitionFrames, transitionFrames * 2, 0, 1);
-      drawParticipants(t);
-    } else {
-      drawParticipants(1);
-
-      // Phase 3: Chart and Discussion Appearance
-      if (elapsed < transitionFrames * 3) {
-        let t = map(elapsed, transitionFrames * 2, transitionFrames * 3, 0, 1);
-        drawChartAndDiscussion(t);
-      } else {
-        drawChartAndDiscussion(1);
-      }
+  let elapsedFrames = frameCount - startFrame;
+  
+  // Draw stopwatch
+  let stopwatchSize = 100;
+  let centerX = width / 2;
+  let centerY = height / 2 - 150;
+  
+  noFill();
+  strokeWeight(4);
+  stroke(255, 200);
+  ellipse(centerX, centerY, stopwatchSize, stopwatchSize);
+  
+  // Draw stopwatch needle
+  let needleLength = stopwatchSize / 2 - 10;
+  strokeWeight(3);
+  let angle = map(elapsedFrames, 0, 120, 0, TWO_PI);
+  let nx = centerX + cos(angle - HALF_PI) * needleLength;
+  let ny = centerY + sin(angle - HALF_PI) * needleLength;
+  line(centerX, centerY, nx, ny);
+  
+  // Nodes operation and highlighting
+  fill(0);
+  stroke(255, 200);
+  strokeWeight(1);
+  for (let i = 0; i < nodeXpositions.length; i++) {
+    if (elapsedFrames > 60 + i * 20) {
+      nodesOpacity[i] = min(nodesOpacity[i] + 5, 255);
+    }
+    fill(255, nodesOpacity[i]);
+    ellipse(nodeXpositions[i], nodeYpositions[i], 40, 40);
+    if (i < nodeXpositions.length - 1) {
+      line(nodeXpositions[i] + 20, nodeYpositions[i], nodeXpositions[i + 1] - 20, nodeYpositions[i + 1]);
     }
   }
-
-  // Text overlays
-  if (elapsed > transitionFrames * 2) {
-    fill(255, 255, 255, (elapsed - transitionFrames * 2) / transitionFrames * 255);
-    textSize(20);
-    text("While democracy offers many benefits,", width / 2, height - 80);
-    text("it requires active participation and vigilance from its citizens.", width / 2, height - 50);
+  
+  // Log efficiency and final text
+  if (elapsedFrames > 120) {
+    textSize(32);
+    fill(255, textAlpha);
+    text('log(n)', centerX, centerY + 60);
+    if (textAlpha < 255) {
+      textAlpha += 5;
+    }
   }
   
-  // Stop animation after duration
-  if (elapsed > duration) {
+  if (elapsedFrames > 180) {
+    fill(255);
+    textSize(16);
+    text("These rules ensure that the tree remains approximately balanced,", 50, height - 70);
+    text("allowing for operations like insertion and search to run in logarithmic time.", 50, height - 50);
+  }
+  
+  if (elapsedFrames > 480) {
     noLoop();
-  }
-}
-
-function drawTableAndChairs(t) {
-  let tableWidth = 200;
-  let tableHeight = 100;
-  fill(50, 50, 50, 255 * t);
-  rectMode(CENTER);
-  rect(width / 2, height / 2, tableWidth, tableHeight);
-
-  let chairDistance = 150;
-  fill(70, 70, 70, 255 * t);
-  ellipse(width / 2 - chairDistance * t, height / 2 + chairDistance / 2 * t, 30, 30);
-  ellipse(width / 2 + chairDistance * t, height / 2 + chairDistance / 2 * t, 30, 30);
-  ellipse(width / 2, height / 2 - chairDistance * t, 30, 30);
-}
-
-function drawParticipants(t) {
-  let participantSize = 20;
-  fill(100, 200, 250, 255 * t);
-  ellipse(width / 2 - 75 * t, height / 2, participantSize, participantSize);
-  ellipse(width / 2 + 75 * t, height / 2, participantSize, participantSize);
-  ellipse(width / 2, height / 2 + 50 * t, participantSize, participantSize);
-}
-
-function drawChartAndDiscussion(t) {
-  fill(180, 180, 180, 230 * t);
-  rect(width / 2, height / 2 - 180, 150, 90);
-  
-  stroke(255, 255, 255, 230 * t);
-  line(width / 2 - 65, height / 2 - 155, width / 2 + 65, height / 2 - 155);
-  line(width / 2 - 65, height / 2 - 135, width / 2 + 65, height / 2 - 135);
-  line(width / 2 - 65, height / 2 - 115, width / 2 + 65, height / 2 - 115);
-  noStroke();
-  
-  fill(255, 255, 255, 230 * t);
-  for (let i = 0; i < 5; i++) {
-    let y = height / 2 - 180 + i * 18;
-    ellipse(width / 2 - 65, y, 5, 5);
   }
 }
     </script>

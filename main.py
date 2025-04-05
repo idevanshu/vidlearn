@@ -8,7 +8,7 @@ from prompts import script_system_prompt, animation_system_prompt
 from video import merge_with_ffmpeg, merge_videos
 from animation import generate_html, record_animation
 
-openai_api = "your-api-key-here"
+openai_api = "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"
 
 client = OpenAI(api_key = openai_api)
 
@@ -87,7 +87,7 @@ async def validate_code_in_browser(js_code):
 
     rendered = Template(html_template).render(code=js_code)
     html_path = Path(tempfile.gettempdir()) / "validate_animation.html"
-    html_path.write_text(rendered)
+    html_path.write_text(rendered , encoding = "utf-8")
 
     # Launch headless browser
     browser = await launch(headless=True, args=["--no-sandbox"], executablePath = CHROME_PATH)
@@ -111,14 +111,16 @@ async def validate_code_in_browser(js_code):
     return success and not has_js_error
 
 def generate_valid_animation_code(prompt, max_attempts=3):
+    past_error = ""
     for attempt in range(1, max_attempts + 1):
         print(f"🎯 Generating animation code (attempt {attempt})...")
-        raw_code = generate_response(animation_system_prompt, prompt)
+        raw_code = generate_response(animation_system_prompt, f"{prompt} + dont repeat this error again: {past_error}")
         clean_code = extract_js_code(raw_code)
 
         try:
             is_valid = asyncio.run(validate_code_in_browser(clean_code))
         except Exception as e:
+            past_error = e
             print(f"⚠️ Validation failed: {e}")
             is_valid = False
 
@@ -172,11 +174,14 @@ if __name__ == "__main__":
     clear_folder("segments")
     clear_folder("voice")
 
-    user_prompt = "explain democracy"
+    user_prompt = "explain red black trees"
 
     script = generate_response(script_system_prompt , user_prompt)
 
     script = safe_parse_json(script)
+
+    with open('scripts.json', 'w') as f:
+        json.dump(script, f)
 
     for segments in script:
         segment_id = segments["id"]

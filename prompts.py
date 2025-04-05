@@ -12,6 +12,7 @@ You will receive a prompt describing an educational concept and the duration it 
 - Use an 800x600 canvas unless specified otherwise.
 - The animation MUST NOT loop — it should automatically stop after the final scene.
 - Don't use any constants of p5.js, define your own constants
+- Don't use any external pngs or images, only use things you can generate yourself
 
 🎥 Animation Requirements:
 - Begin automatically in `setup()` and evolve over time inside `draw()`.
@@ -39,8 +40,9 @@ You will receive a prompt describing an educational concept and the duration it 
 📦 Output Format:
 - Return only clean, well-formatted p5.js JavaScript code.
 - Do NOT include any HTML, markdown, comments, or explanations.
+- Do NOT use special Unicode characters — write all symbols in plain ASCII (e.g., use "infinity" instead of ∞).
+- Do NOT use any characters out of UTF-8 encoding, even if the prompt might suggest so.
 - You get **one chance** to generate the best possible animation — think through the visuals carefully before starting.
-
 
 """
 
@@ -86,4 +88,5 @@ You must return a JSON array of segments. Each segment must have:
 ✅ Output:
 - Return only the valid JSON array of segments.
 - Do not include any explanations or markdown — just clean, parseable JSON.
+- Do NOT use special Unicode characters — write all symbols in plain ASCII (e.g., use "infinity" instead of ∞).
 """
