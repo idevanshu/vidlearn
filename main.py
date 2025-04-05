@@ -8,9 +8,38 @@ from prompts import script_system_prompt, animation_system_prompt
 from video import merge_with_ffmpeg, merge_videos
 from animation import generate_html, record_animation
 
-openai_api = "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"
+openai_api = "openai-api-key-here"
+
+claude_api = "claude-api-key-here"
 
 client = OpenAI(api_key = openai_api)
+
+import anthropic
+
+client_claude = anthropic.Anthropic(api_key = claude_api)
+
+def generate_claude(system_prompt, user_prompt):
+    response = client_claude.messages.create(
+        model="claude-3-7-sonnet-20250219",
+        max_tokens = 8000,
+        system=system_prompt,
+        messages=[
+            {"role": "user", "content": user_prompt}
+        ]
+    )
+
+    # Extract code from the response content
+    code = extract_code_from_response(response.content)
+    return code
+
+def extract_code_from_response(content):
+    # Handle content as a list of blocks (structured response format)
+    for block in content:
+        if hasattr(block, 'type') and block.type == 'text':
+            return block.text
+    
+    # If we couldn't extract code using the block method, return None
+    return None
 
 """
 Pipeline:
@@ -114,14 +143,14 @@ def generate_valid_animation_code(prompt, max_attempts=3):
     past_error = ""
     for attempt in range(1, max_attempts + 1):
         print(f"🎯 Generating animation code (attempt {attempt})...")
-        raw_code = generate_response(animation_system_prompt, f"{prompt} + dont repeat this error again: {past_error}")
-        clean_code = extract_js_code(raw_code)
+        clean_code = generate_claude(animation_system_prompt, f"{prompt}. Dont repeat this error again: {past_error}")
 
         try:
             is_valid = asyncio.run(validate_code_in_browser(clean_code))
         except Exception as e:
             past_error = e
             print(f"⚠️ Validation failed: {e}")
+            
             is_valid = False
 
         if is_valid:
@@ -129,6 +158,7 @@ def generate_valid_animation_code(prompt, max_attempts=3):
             return clean_code
         else:
             print("❌ Code invalid or has JS errors. Retrying...")
+            print(clean_code)
 
     raise RuntimeError("❌ All attempts to generate valid animation code failed.")
 
@@ -154,34 +184,20 @@ def safe_parse_json(gpt_output):
     except json.JSONDecodeError as e:
         print("❌ JSON parsing failed:", e)
         return None
-    
-def extract_js_code(gpt_output: str) -> str:
-    """
-    Extracts raw JavaScript code from a Markdown code block like ```javascript ... ```
-    """
-    if gpt_output.startswith("```javascript"):
-        # Remove the first line and last line
-        lines = gpt_output.strip().splitlines()
-        return "\n".join(lines[1:-1]).strip()
-    elif gpt_output.startswith("```"):
-        # In case it just uses ``` without specifying language
-        lines = gpt_output.strip().splitlines()
-        return "\n".join(lines[1:-1]).strip()
-    return gpt_output.strip()
 
 if __name__ == "__main__":
     clear_folder("final_videos")
     clear_folder("segments")
     clear_folder("voice")
 
-    user_prompt = "explain red black trees"
+    user_prompt = "explain teichmuler interuniversal theory"
 
     script = generate_response(script_system_prompt , user_prompt)
 
     script = safe_parse_json(script)
 
     with open('scripts.json', 'w') as f:
-        json.dump(script, f)
+        json.dump(script ,f)
 
     for segments in script:
         segment_id = segments["id"]

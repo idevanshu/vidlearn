@@ -24,7 +24,7 @@ async def record_animation(html_path, segment_id, duration):
 
     try:
         page = await browser.newPage()
-        page.on('console', lambda msg: print(f'BROWSER LOG: {msg.text}'))
+        page.on('console', lambda msg: print(f'[JS] {msg.text}'))
 
         await page.goto(f"file://{str(Path(html_path).absolute())}")
         print("✅ Page loaded")
@@ -32,15 +32,14 @@ async def record_animation(html_path, segment_id, duration):
         await page.waitForSelector("canvas")
         print("✅ Canvas found")
 
-        # Set up error logging
         await page.evaluate("""
-            window.onerror = function(message, source, lineno, colno, error) {
-                console.error('JavaScript error:', message, 'at line', lineno, ':', error);
+            window.onerror = function(msg, src, line, col, err) {
+                console.error("JSERROR: " + msg + " at " + line + ":" + col);
                 return true;
             };
         """)
 
-        print("🎥 Setting up CCapture and base64 blob handling...")
+        print("🎥 Injecting CCapture setup and base64 save logic...")
 
         await page.evaluate(f"""
             try {{
@@ -53,54 +52,65 @@ async def record_animation(html_path, segment_id, duration):
 
                 let frameCount = 0;
                 const maxFrames = {duration * 60};
-
                 window.blobBase64 = null;
 
                 function captureFrame() {{
-                    capturer.capture(document.querySelector('canvas'));
-                    frameCount++;
+                    try {{
+                        capturer.capture(document.querySelector('canvas'));
+                        frameCount++;
 
-                    if (frameCount >= maxFrames) {{
-                        capturer.stop();
-                        capturer.save(function(blob) {{
-                            const reader = new FileReader();
-                            reader.onloadend = function() {{
-                                const base64Data = reader.result.split(',')[1]; // strip data URI
-                                window.blobBase64 = base64Data;
-                                console.log("✅ Blob base64 ready.");
-                            }};
-                            reader.readAsDataURL(blob);
-                        }});
-                    }} else {{
-                        requestAnimationFrame(captureFrame);
+                        if (frameCount >= maxFrames) {{
+                            console.log("⏱ Max frames reached: " + frameCount);
+                            capturer.stop();
+                            capturer.save(function(blob) {{
+                                console.log("💾 capturer.save() called");
+                                const reader = new FileReader();
+                                reader.onloadend = function() {{
+                                    console.log("📦 base64 generated");
+                                    const base64Data = reader.result.split(',')[1];
+                                    window.blobBase64 = base64Data;
+                                }};
+                                reader.onerror = function(e) {{
+                                    console.error("❌ FileReader error", e);
+                                }};
+                                try {{
+                                    reader.readAsDataURL(blob);
+                                }} catch (err) {{
+                                    console.error("❌ Failed to read blob:", err.message);
+                                }}
+                            }});
+                        }} else {{
+                            requestAnimationFrame(captureFrame);
+                        }}
+                    }} catch(e) {{
+                        console.error("❌ Error during captureFrame:", e.message);
                     }}
                 }}
 
                 captureFrame();
-            }} catch (e) {{
-                console.error("Capture setup error:", e);
+            }} catch(e) {{
+                console.error("❌ Top-level capture setup error:", e.message);
             }}
         """)
 
-        # Wait for animation + blob to be ready
-        print(f"🕒 Waiting {duration + 5} seconds for recording...")
+        print(f"🕒 Waiting {duration + 5} seconds for animation to complete...")
         await asyncio.sleep(duration + 5)
 
-        # Wait until blob is populated
-        for i in range(10):
-            ready = await page.evaluate("window.blobBase64 !== null")
+        # Wait for blobBase64 to be ready
+        print("⏳ Waiting for blobBase64 to be set...")
+        for i in range(30):  # wait up to ~15 seconds
+            ready = await page.evaluate("typeof window.blobBase64 === 'string' && window.blobBase64.length > 1000")
             if ready:
+                print("✅ Blob is ready!")
                 break
             await asyncio.sleep(1)
-
-        if not ready:
+        else:
             raise RuntimeError("❌ Timed out waiting for blob base64.")
 
-        # Retrieve and decode base64
+        # Decode and save
         base64_str = await page.evaluate("window.blobBase64")
         video_data = base64.b64decode(base64_str)
 
-        # Save to segments/ folder
         out_path = Path("segments") / f"{segment_id}.webm"
         out_path.parent.mkdir(exist_ok=True)
         out_path.write_bytes(video_data)
