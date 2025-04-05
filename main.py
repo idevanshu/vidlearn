@@ -8,7 +8,7 @@ from prompts import script_system_prompt, animation_system_prompt
 from video import merge_with_ffmpeg, merge_videos
 from animation import generate_html, record_animation
 
-openai_api = "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"
+openai_api = "your-api-key-here"
 
 client = OpenAI(api_key = openai_api)
 
