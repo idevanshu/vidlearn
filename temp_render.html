@@ -16,98 +16,97 @@
   </head>
   <body>
     <script>
-      let phase = 0;
-let totalFrames = 420;
-let gridLinesPhaseEnd = 140;
-let engineerPhaseEnd = 280;
+      let startTime;
+let duration = 360; // 6 seconds at 60 FPS
+let transitionFrames = 60;
 
 function setup() {
   createCanvas(800, 600);
-  frameRate(60);
+  startTime = frameCount;
+  noStroke();
+  textFont('Arial');
+  textAlign(CENTER, CENTER);
 }
 
 function draw() {
   background(0);
-  
-  if (frameCount <= gridLinesPhaseEnd) {
-    drawGridLinesScene();
-  } else if (frameCount <= engineerPhaseEnd) {
-    drawEngineerScene();
+  let elapsed = frameCount - startTime;
+
+  // Phase 1: Chairs and Table Formation
+  if (elapsed < transitionFrames) {
+    let t = map(elapsed, 0, transitionFrames, 0, 1);
+    drawTableAndChairs(t);
   } else {
-    drawNeuralNetScene();
+    drawTableAndChairs(1);
+
+    // Phase 2: Participants Slide In
+    if (elapsed < transitionFrames * 2) {
+      let t = map(elapsed, transitionFrames, transitionFrames * 2, 0, 1);
+      drawParticipants(t);
+    } else {
+      drawParticipants(1);
+
+      // Phase 3: Chart and Discussion Appearance
+      if (elapsed < transitionFrames * 3) {
+        let t = map(elapsed, transitionFrames * 2, transitionFrames * 3, 0, 1);
+        drawChartAndDiscussion(t);
+      } else {
+        drawChartAndDiscussion(1);
+      }
+    }
   }
 
-  if (frameCount == totalFrames) {
+  // Text overlays
+  if (elapsed > transitionFrames * 2) {
+    fill(255, 255, 255, (elapsed - transitionFrames * 2) / transitionFrames * 255);
+    textSize(20);
+    text("While democracy offers many benefits,", width / 2, height - 80);
+    text("it requires active participation and vigilance from its citizens.", width / 2, height - 50);
+  }
+  
+  // Stop animation after duration
+  if (elapsed > duration) {
     noLoop();
   }
 }
 
-function drawGridLinesScene() {
-  let alpha = map(frameCount, 0, gridLinesPhaseEnd, 0, 255);
+function drawTableAndChairs(t) {
+  let tableWidth = 200;
+  let tableHeight = 100;
+  fill(50, 50, 50, 255 * t);
+  rectMode(CENTER);
+  rect(width / 2, height / 2, tableWidth, tableHeight);
+
+  let chairDistance = 150;
+  fill(70, 70, 70, 255 * t);
+  ellipse(width / 2 - chairDistance * t, height / 2 + chairDistance / 2 * t, 30, 30);
+  ellipse(width / 2 + chairDistance * t, height / 2 + chairDistance / 2 * t, 30, 30);
+  ellipse(width / 2, height / 2 - chairDistance * t, 30, 30);
+}
+
+function drawParticipants(t) {
+  let participantSize = 20;
+  fill(100, 200, 250, 255 * t);
+  ellipse(width / 2 - 75 * t, height / 2, participantSize, participantSize);
+  ellipse(width / 2 + 75 * t, height / 2, participantSize, participantSize);
+  ellipse(width / 2, height / 2 + 50 * t, participantSize, participantSize);
+}
+
+function drawChartAndDiscussion(t) {
+  fill(180, 180, 180, 230 * t);
+  rect(width / 2, height / 2 - 180, 150, 90);
   
-  push();
-  stroke(255, alpha);
-  for (let x = 0; x <= width; x += 40) {
-    line(x, 0, x, height);
-  }
-  for (let y = 0; y <= height; y += 40) {
-    line(0, y, width, y);
-  }
-  pop();
+  stroke(255, 255, 255, 230 * t);
+  line(width / 2 - 65, height / 2 - 155, width / 2 + 65, height / 2 - 155);
+  line(width / 2 - 65, height / 2 - 135, width / 2 + 65, height / 2 - 135);
+  line(width / 2 - 65, height / 2 - 115, width / 2 + 65, height / 2 - 115);
+  noStroke();
   
-  fill(255, alpha);
-  textSize(24);
-  textAlign(CENTER, CENTER);
-  text("Computer-Generated Image", width / 2, height - 50);
-}
-
-function drawEngineerScene() {
-  let alphaIn = map(frameCount, gridLinesPhaseEnd, gridLinesPhaseEnd + 30, 0, 255);
-  let alphaOut = map(frameCount, engineerPhaseEnd - 30, engineerPhaseEnd, 255, 0);
-
-  push();
-  stroke(205, alphaIn);
-  fill(255, alphaIn);
-  drawBlueprint();
-  fill(255, alphaIn);
-  textSize(24);
-  textAlign(CENTER, CENTER);
-  text("Engineer with Blueprint Graphics", width / 2, height - 50);
-  pop();
-}
-
-function drawBlueprint() {
-  stroke(100, 255, 200);
-  noFill();
-  beginShape();
-  vertex(200, 180);
-  vertex(300, 150);
-  vertex(600, 200);
-  endShape();
-}
-
-function drawNeuralNetScene() {
-  let alphaIn = map(frameCount, engineerPhaseEnd, engineerPhaseEnd + 30, 0, 255);
-
-  stroke(100, 255, 100, alphaIn);
-  for (let i = 1; i <= 5; i++) {
-    let yOffset = i * 100;
-    for (let j = 1; j <= i; j++) {
-      drawNeuralNode((width / 5) * j, yOffset, alphaIn);
-    }
+  fill(255, 255, 255, 230 * t);
+  for (let i = 0; i < 5; i++) {
+    let y = height / 2 - 180 + i * 18;
+    ellipse(width / 2 - 65, y, 5, 5);
   }
-
-  fill(255, alphaIn);
-  textSize(24);
-  textAlign(CENTER, CENTER);
-  text("Neural Network Visualization", width / 2, height - 50);
-}
-
-function drawNeuralNode(x, y, alpha) {
-  push();
-  fill(100, 255, 0, alpha);
-  ellipse(x, y, 20, 20);
-  pop();
 }
     </script>
   </body>
