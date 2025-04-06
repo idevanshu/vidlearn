@@ -1,21 +1,9 @@
 import asyncio
 import base64
 from pathlib import Path
-from pyppeteer import launch
 from jinja2 import Template
-import signal
 
-async def safe_launch(*args, **kwargs):
-    original_signal = signal.signal
-
-    def silent_blocker(sig, handler):
-        print(f"⚠️ [SafeLaunch] Ignored signal registration for sig={sig}")
-
-    signal.signal = silent_blocker  # temporarily ignore
-    try:
-        return await launch(*args, **kwargs)
-    finally:
-        signal.signal = original_signal  # restore afterward
+from helper import safe_launch
 
 def generate_html(js_code, output_html_path="temp_render.html"):
     template_text = Path("base.html").read_text()
@@ -111,7 +99,7 @@ async def record_animation(html_path, segment_id, duration):
 
         # Wait for blobBase64 to be ready
         print("⏳ Waiting for blobBase64 to be set...")
-        for i in range(30):  # wait up to ~15 seconds
+        for i in range(30):  # wait up to ~30 seconds
             ready = await page.evaluate("typeof window.blobBase64 === 'string' && window.blobBase64.length > 1000")
             if ready:
                 print("✅ Blob is ready!")

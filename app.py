@@ -2,10 +2,8 @@ import streamlit as st
 import json
 import os
 
-# Import your existing functions or include them here
 from main import generate_video , clear_folder
 
-# Main Streamlit app
 def main():
     clear_folder("final_videos")
     clear_folder("segments")
@@ -16,7 +14,6 @@ def main():
     st.title("🎬 Educational Animation Generator")
     st.write("Generate educational animations with synchronized voiceovers")
     
-    # Input form
     with st.form("animation_form"):
         user_prompt = st.text_area(
             "What educational concept would you like to animate?", 
@@ -32,28 +29,22 @@ def main():
         
         submitted = st.form_submit_button("Generate Animation")
     
-    # Process when form is submitted
     if submitted:
         if not user_prompt:
             st.error("Please enter a prompt describing the educational concept.")
             return
-        
-        # Create placeholder for progress updates
-        progress_placeholder = st.empty()
         
         with st.spinner("Generating your educational animation..."):
             try:
                 success = generate_video(user_prompt, output_filename)
                 
                 if success and os.path.exists(output_filename):
-                    # Display the video
                     with open(output_filename, "rb") as video_file:
                         video_bytes = video_file.read()
                         
                     st.success(f"Animation successfully generated! Download below.")
                     st.video(video_bytes)
                     
-                    # Download button
                     st.download_button(
                         label="Download Video",
                         data=video_bytes,
@@ -61,7 +52,6 @@ def main():
                         mime="video/mp4"
                     )
                     
-                    # Script display (optional)
                     with open('scripts.json', 'r') as f:
                         script_data = json.load(f)
                     

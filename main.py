@@ -1,41 +1,24 @@
 from openai import OpenAI
 import json
 import asyncio
-import os
-from pathlib import Path
-from pyppeteer import launch
 from pathlib import Path
 from jinja2 import Template
 import tempfile
 import anthropic
-import signal
 
 from prompts import script_system_prompt, animation_system_prompt
 from video import merge_with_ffmpeg, merge_videos
 from animation import generate_html, record_animation
+from helper import safe_launch, clear_folder, run_async_safely
 
-openai_api = "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"
+openai_api = "openai-api"
 
-claude_api = "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"
+claude_api = "claude-api"
 
 client = OpenAI(api_key = openai_api)
 
-
-
 client_claude = anthropic.Anthropic(api_key = claude_api)
 
-
-async def safe_launch(*args, **kwargs):
-    original_signal = signal.signal
-
-    def silent_blocker(sig, handler):
-        print(f"⚠️ [SafeLaunch] Ignored signal registration for sig={sig}")
-
-    signal.signal = silent_blocker  # temporarily ignore
-    try:
-        return await launch(*args, **kwargs)
-    finally:
-        signal.signal = original_signal  # restore afterward
 
 def generate_claude(system_prompt, user_prompt):
     response = client_claude.messages.create(
@@ -47,17 +30,14 @@ def generate_claude(system_prompt, user_prompt):
         ]
     )
 
-    # Extract code from the response content
     code = extract_code_from_response(response.content)
     return code
 
 def extract_code_from_response(content):
-    # Handle content as a list of blocks (structured response format)
     for block in content:
         if hasattr(block, 'type') and block.type == 'text':
             return block.text
     
-    # If we couldn't extract code using the block method, return None
     return None
 
 """
@@ -66,28 +46,7 @@ Pipeline:
 user_prompt -> generate script -> generate animation + generate animations -> merge into one video
 
 """
-def clear_folder(folder_path):
-    folder = Path(folder_path)
-    if not folder.exists():
-        print(f"⚠️ Folder '{folder}' does not exist.")
-        return
 
-    for item in folder.iterdir():
-        try:
-            if item.is_file() or item.is_symlink():
-                item.unlink()
-            elif item.is_dir():
-                # Recursively delete all contents
-                for root, dirs, files in os.walk(item, topdown=False):
-                    for file in files:
-                        Path(root, file).unlink()
-                    for subdir in dirs:
-                        Path(root, subdir).rmdir()
-                item.rmdir()
-        except Exception as e:
-            print(f"❌ Failed to delete {item}: {e}")
-
-    print(f"✅ Cleared contents of folder: {folder}")
 
 
 def generate_response(system_prompt, user_prompt):
@@ -105,8 +64,6 @@ async def validate_code_in_browser(js_code):
 
     CHROME_PATH = "C:/Program Files/Google/Chrome/Application/chrome.exe"
     
-
-    # Inject code into HTML template
     html_template = """
     <html>
       <head>
@@ -151,7 +108,6 @@ async def validate_code_in_browser(js_code):
     finally:
         await browser.close()
 
-    # Check logs for any JS errors
     has_js_error = any("JSERROR:" in log for log in logs)
     return (success and not has_js_error , logs)
 
@@ -201,13 +157,6 @@ def safe_parse_json(gpt_output):
         print("❌ JSON parsing failed:", e)
         return None
     
-def run_async_safely(coroutine):
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(coroutine)
     
 def generate_video(user_prompt , output_path):
     script = generate_response(script_system_prompt , user_prompt)
