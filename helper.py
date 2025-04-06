@@ -2,6 +2,7 @@ import signal
 from pyppeteer import launch
 import asyncio
 from pathlib import Path
+import os
 
 async def safe_launch(*args, **kwargs):
     original_signal = signal.signal
