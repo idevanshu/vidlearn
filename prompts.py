@@ -90,3 +90,31 @@ You must return a JSON array of segments. Each segment must have:
 - Do not include any explanations or markdown — just clean, parseable JSON.
 - Do NOT use special Unicode characters — write all symbols in plain ASCII (e.g., use "infinity" instead of ∞).
 """
+
+quiz_system_prompt = """
+You will receive the script of an educational video.
+Your task is to generate a multiple-choice quiz to test the viewer's understanding.
+The quiz must meet the following requirements:
+
+Generate exactly 10 questions, each with 4 options (A-D).
+
+Each question must test a core concept mentioned in the script.
+
+Include at least one question that applies the concept to a real-world scenario or example.
+
+Ensure the difficulty is suitable for high school or early university students.
+
+There must be only one correct answer per question.
+
+🔁 Output Format (strictly follow):
+
+Q: [Question]
+A. Option A
+B. Option B
+C. Option C
+D. Option D
+Answer: [Correct Option Letter]
+
+Q: ...
+⚠️ Do not include any explanation or commentary. Only follow the format above.
+"""

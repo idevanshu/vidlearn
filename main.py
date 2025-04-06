@@ -11,14 +11,13 @@ from video import merge_with_ffmpeg, merge_videos
 from animation import generate_html, record_animation
 from helper import safe_launch, clear_folder, run_async_safely
 
-openai_api = "openai-api"
+openai_api = "openai-key"
 
-claude_api = "claude-api"
+claude_api = "claude-key"
 
 client = OpenAI(api_key = openai_api)
 
 client_claude = anthropic.Anthropic(api_key = claude_api)
-
 
 def generate_claude(system_prompt, user_prompt):
     response = client_claude.messages.create(
@@ -159,6 +158,9 @@ def safe_parse_json(gpt_output):
     
     
 def generate_video(user_prompt , output_path):
+    clear_folder("final_videos")
+    clear_folder("segments")
+    clear_folder("voice")
     script = generate_response(script_system_prompt , user_prompt)
 
     script = safe_parse_json(script)
@@ -193,10 +195,6 @@ def generate_video(user_prompt , output_path):
     return True
 
 if __name__ == "__main__":
-    clear_folder("final_videos")
-    clear_folder("segments")
-    clear_folder("voice")
-
     user_prompt = "explain binary search algo"
 
     generate_video(user_prompt , "output.mp4")
