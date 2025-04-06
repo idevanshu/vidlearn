@@ -3,20 +3,39 @@ import json
 import asyncio
 import os
 from pathlib import Path
+from pyppeteer import launch
+from pathlib import Path
+from jinja2 import Template
+import tempfile
+import anthropic
+import signal
 
 from prompts import script_system_prompt, animation_system_prompt
 from video import merge_with_ffmpeg, merge_videos
 from animation import generate_html, record_animation
 
-openai_api = "openai-api-key-here"
+openai_api = "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"
 
-claude_api = "claude-api-key-here"
+claude_api = "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"
 
 client = OpenAI(api_key = openai_api)
 
-import anthropic
+
 
 client_claude = anthropic.Anthropic(api_key = claude_api)
+
+
+async def safe_launch(*args, **kwargs):
+    original_signal = signal.signal
+
+    def silent_blocker(sig, handler):
+        print(f"⚠️ [SafeLaunch] Ignored signal registration for sig={sig}")
+
+    signal.signal = silent_blocker  # temporarily ignore
+    try:
+        return await launch(*args, **kwargs)
+    finally:
+        signal.signal = original_signal  # restore afterward
 
 def generate_claude(system_prompt, user_prompt):
     response = client_claude.messages.create(
@@ -85,10 +104,7 @@ def generate_response(system_prompt, user_prompt):
 async def validate_code_in_browser(js_code):
 
     CHROME_PATH = "C:/Program Files/Google/Chrome/Application/chrome.exe"
-    from pyppeteer import launch
-    from pathlib import Path
-    from jinja2 import Template
-    import tempfile
+    
 
     # Inject code into HTML template
     html_template = """
@@ -119,7 +135,7 @@ async def validate_code_in_browser(js_code):
     html_path.write_text(rendered , encoding = "utf-8")
 
     # Launch headless browser
-    browser = await launch(headless=True, args=["--no-sandbox"], executablePath = CHROME_PATH)
+    browser = await safe_launch(headless=True, args=["--no-sandbox"], executablePath = CHROME_PATH)
     page = await browser.newPage()
     logs = []
 
@@ -137,7 +153,7 @@ async def validate_code_in_browser(js_code):
 
     # Check logs for any JS errors
     has_js_error = any("JSERROR:" in log for log in logs)
-    return success and not has_js_error
+    return (success and not has_js_error , logs)
 
 def generate_valid_animation_code(prompt, max_attempts=3):
     past_error = ""
@@ -146,9 +162,9 @@ def generate_valid_animation_code(prompt, max_attempts=3):
         clean_code = generate_claude(animation_system_prompt, f"{prompt}. Dont repeat this error again: {past_error}")
 
         try:
-            is_valid = asyncio.run(validate_code_in_browser(clean_code))
+            is_valid, logs = run_async_safely(validate_code_in_browser(clean_code))
+            past_error = logs
         except Exception as e:
-            past_error = e
             print(f"⚠️ Validation failed: {e}")
             
             is_valid = False
@@ -184,14 +200,16 @@ def safe_parse_json(gpt_output):
     except json.JSONDecodeError as e:
         print("❌ JSON parsing failed:", e)
         return None
-
-if __name__ == "__main__":
-    clear_folder("final_videos")
-    clear_folder("segments")
-    clear_folder("voice")
-
-    user_prompt = "explain teichmuler interuniversal theory"
-
+    
+def run_async_safely(coroutine):
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop.run_until_complete(coroutine)
+    
+def generate_video(user_prompt , output_path):
     script = generate_response(script_system_prompt , user_prompt)
 
     script = safe_parse_json(script)
@@ -211,7 +229,7 @@ if __name__ == "__main__":
 
         html_path = generate_html(animation_code)
 
-        asyncio.run(
+        run_async_safely(
             record_animation(html_path, segment_id, duration)
         )
 
@@ -221,4 +239,15 @@ if __name__ == "__main__":
 
         print("Done with: ", segment_id)
     
-    merge_videos("final_videos", "output.mp4" )
+    merge_videos("final_videos", output_path)
+
+    return True
+
+if __name__ == "__main__":
+    clear_folder("final_videos")
+    clear_folder("segments")
+    clear_folder("voice")
+
+    user_prompt = "explain binary search algo"
+
+    generate_video(user_prompt , "output.mp4")

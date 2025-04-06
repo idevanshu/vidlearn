@@ -25,336 +25,220 @@
   </head>
   <body>
     <script>
-      function setup() {
+      let targetValue = 63;
+let sortedArray = [];
+let labels = [];
+let leftIndex = 0;
+let rightIndex = 0;
+let midIndex = 0;
+let animationState = "initializing"; // states: initializing, searching, found, notFound
+let animationStartTime = 0;
+let animationDuration = 5000; // 5 seconds
+let message = "";
+let highlightAlpha = 0;
+let pulseValue = 0;
+let arrowY = 0;
+
+function setup() {
   createCanvas(800, 600);
-  noLoop();
-  frameRate(60);
-  textAlign(CENTER, CENTER);
-  textSize(24);
-  symbolsSetup();
-}
-
-let time = 0;
-let duration = 300; // 5 seconds at 60fps
-let symbols = [];
-let unifiedStructure = {};
-
-function symbolsSetup() {
-  // Create various mathematical symbols
-  symbols = [
-    { type: "pi", x: random(100, 700), y: random(100, 500), size: random(30, 50), color: color(255, 200, 100), rotation: random(TWO_PI), speed: random(0.5, 1.5) },
-    { type: "sigma", x: random(100, 700), y: random(100, 500), size: random(30, 50), color: color(100, 200, 255), rotation: random(TWO_PI), speed: random(0.5, 1.5) },
-    { type: "integral", x: random(100, 700), y: random(100, 500), size: random(30, 50), color: color(200, 255, 100), rotation: random(TWO_PI), speed: random(0.5, 1.5) },
-    { type: "graph", x: random(100, 700), y: random(100, 500), size: random(40, 60), color: color(255, 100, 200), rotation: random(TWO_PI), speed: random(0.5, 1.5) },
-    { type: "matrix", x: random(100, 700), y: random(100, 500), size: random(40, 60), color: color(150, 150, 255), rotation: random(TWO_PI), speed: random(0.5, 1.5) },
-    { type: "function", x: random(100, 700), y: random(100, 500), size: random(40, 60), color: color(255, 255, 150), rotation: random(TWO_PI), speed: random(0.5, 1.5) },
-    { type: "set", x: random(100, 700), y: random(100, 500), size: random(30, 50), color: color(200, 200, 200), rotation: random(TWO_PI), speed: random(0.5, 1.5) },
-    { type: "infinity", x: random(100, 700), y: random(100, 500), size: random(30, 50), color: color(255, 150, 150), rotation: random(TWO_PI), speed: random(0.5, 1.5) }
-  ];
   
-  // Setup unified structure
-  unifiedStructure = {
-    x: width / 2,
-    y: height / 2,
-    size: 0,
-    rotation: 0,
-    alpha: 0
-  };
+  // Create sorted array of numbers
+  for (let i = 0; i <= 100; i += 5) {
+    sortedArray.push(i);
+    labels.push(i.toString());
+  }
+  
+  leftIndex = 0;
+  rightIndex = sortedArray.length - 1;
+  
+  animationState = "searching";
+  animationStartTime = millis();
 }
 
 function draw() {
   background(0);
   
-  // Progress the animation
-  time++;
-  let progress = constrain(time / duration, 0, 1);
+  // Calculate animation progress
+  let progress = (millis() - animationStartTime) / animationDuration;
+  progress = constrain(progress, 0, 1);
   
-  // First phase: symbols floating independently (0-40%)
-  if (progress < 0.4) {
-    let phase1Progress = progress / 0.4;
-    drawSymbolsFloating(phase1Progress);
+  // Update pulse animation
+  pulseValue = sin(frameCount * 0.1) * 10;
+  
+  drawTitle();
+  drawArray();
+  
+  if (animationState === "searching") {
+    updateSearch(progress);
+  } else if (animationState === "found") {
+    drawFoundMessage();
+  } else if (animationState === "notFound") {
+    drawNotFoundMessage();
   }
   
-  // Second phase: symbols start moving toward center (40-70%)
-  if (progress >= 0.4 && progress < 0.7) {
-    let phase2Progress = (progress - 0.4) / 0.3;
-    drawSymbolsConverging(phase2Progress);
-  }
-  
-  // Third phase: unified structure forms and glows (70-100%)
-  if (progress >= 0.7) {
-    let phase3Progress = (progress - 0.7) / 0.3;
-    drawUnifiedStructure(phase3Progress);
-  }
-  
-  // Stop the animation when complete
-  if (time >= duration) {
-    noLoop();
+  // Stop after full duration
+  if (progress >= 1 && animationState === "searching") {
+    animationState = "notFound";
   }
 }
 
-function drawSymbolsFloating(phase) {
-  push();
-  for (let symbol of symbols) {
-    let oscillation = sin(time * 0.05 * symbol.speed);
-    let x = symbol.x + oscillation * 20;
-    let y = symbol.y + cos(time * 0.04 * symbol.speed) * 15;
-    
-    push();
-    translate(x, y);
-    rotate(symbol.rotation + time * 0.01 * symbol.speed);
-    
-    // Fade in symbols
-    let alpha = min(255, phase * 2 * 255);
-    symbol.color.setAlpha(alpha);
-    fill(symbol.color);
-    noStroke();
-    
-    drawMathSymbol(symbol.type, 0, 0, symbol.size);
-    pop();
-  }
-  pop();
+function drawTitle() {
+  fill(255);
+  textSize(32);
+  textAlign(CENTER, TOP);
+  text("Binary Search Animation", width/2, 40);
+  
+  textSize(18);
+  text("Target Value: " + targetValue, width/2, 90);
 }
 
-function drawSymbolsConverging(phase) {
-  push();
-  for (let symbol of symbols) {
-    // Calculate movement toward center
-    let targetX = width / 2;
-    let targetY = height / 2;
-    
-    let x = lerp(symbol.x, targetX, phase * 0.8);
-    let y = lerp(symbol.y, targetY, phase * 0.8);
-    
-    // Make symbols smaller as they converge
-    let size = lerp(symbol.size, symbol.size * 0.5, phase);
-    
-    push();
-    translate(x, y);
-    rotate(symbol.rotation + time * 0.01 * symbol.speed);
-    
-    // Add motion trails
-    for (let i = 1; i < 4; i++) {
-      let trailAlpha = (1 - phase) * 100 / i;
-      let trailSize = size * (1 - 0.15 * i);
-      
-      symbol.color.setAlpha(trailAlpha);
-      fill(symbol.color);
-      drawMathSymbol(symbol.type, sin(time * 0.1) * i * 3, cos(time * 0.1) * i * 3, trailSize);
-    }
-    
-    // Draw the main symbol
-    symbol.color.setAlpha(255 - phase * 150);
-    fill(symbol.color);
-    drawMathSymbol(symbol.type, 0, 0, size);
-    
-    pop();
-  }
-  pop();
+function drawArray() {
+  let boxWidth = 50;
+  let boxHeight = 40;
+  let startX = width/2 - (sortedArray.length * boxWidth)/2;
+  let startY = height/2 - 50;
   
-  // Start showing unified structure
-  if (phase > 0.5) {
-    let structurePhase = (phase - 0.5) * 2;
-    unifiedStructure.size = structurePhase * 100;
-    unifiedStructure.alpha = structurePhase * 100;
-    drawUnifiedStructureBase(structurePhase);
-  }
-}
-
-function drawUnifiedStructure(phase) {
-  // Scale and rotate the unified structure
-  unifiedStructure.size = 100 + phase * 100;
-  unifiedStructure.rotation = phase * 0.2;
-  unifiedStructure.alpha = 150 + phase * 105;
-  
-  // Draw the complete unified structure
-  drawUnifiedStructureBase(1);
-  
-  // Add pulsating glow effect
-  let pulse = sin(time * 0.1) * 0.2 + 0.8;
-  let glowSize = unifiedStructure.size * (1.1 + pulse * 0.2);
-  let glowAlpha = 100 - pulse * 50;
-  
-  push();
-  translate(unifiedStructure.x, unifiedStructure.y);
-  rotate(unifiedStructure.rotation + time * 0.005);
-  
-  // Draw glow
-  noFill();
-  for (let i = 0; i < 5; i++) {
-    let radius = glowSize * (1 + i * 0.07);
-    stroke(255, glowAlpha / (i + 1));
-    strokeWeight(3 - i * 0.5);
-    beginShape();
-    for (let a = 0; a < TWO_PI; a += TWO_PI / 12) {
-      let r = radius * (1 + sin(a * 3 + time * 0.02) * 0.1);
-      let x = cos(a) * r;
-      let y = sin(a) * r;
-      vertex(x, y);
-    }
-    endShape(CLOSE);
-  }
-  
-  // Draw connecting lines
-  if (phase > 0.3) {
-    stroke(255, 150);
+  // Draw array boxes
+  for (let i = 0; i < sortedArray.length; i++) {
+    let x = startX + i * boxWidth;
+    let y = startY;
+    
+    // Determine if this box is in the current search range
+    let inRange = (i >= leftIndex && i <= rightIndex);
+    let isMid = (i === midIndex && animationState === "searching");
+    
+    // Box styling
+    stroke(255);
     strokeWeight(1);
-    let numLines = 16;
-    for (let i = 0; i < numLines; i++) {
-      let angle1 = TWO_PI * i / numLines;
-      let angle2 = TWO_PI * ((i + 5) % numLines) / numLines;
-      let r1 = unifiedStructure.size * (0.8 + sin(time * 0.03 + i) * 0.1);
-      let r2 = unifiedStructure.size * (0.8 + sin(time * 0.03 + i + 2) * 0.1);
-      
-      let x1 = cos(angle1) * r1;
-      let y1 = sin(angle1) * r1;
-      let x2 = cos(angle2) * r2;
-      let y2 = sin(angle2) * r2;
-      
-      line(x1, y1, x2, y2);
+    
+    if (isMid) {
+      // Mid index with pulsing effect
+      fill(100, 150, 255, 150 + pulseValue);
+      strokeWeight(3);
+    } else if (inRange) {
+      // Current range
+      fill(70, 70, 150, 150);
+    } else {
+      // Outside current range
+      fill(30, 30, 30, 150);
     }
+    
+    // Draw the box
+    rect(x, y, boxWidth, boxHeight);
+    
+    // Draw the number
+    fill(255);
+    textSize(16);
+    textAlign(CENTER, CENTER);
+    text(sortedArray[i], x + boxWidth/2, y + boxHeight/2);
+    
+    // Add index labels below
+    textSize(12);
+    text(i, x + boxWidth/2, y + boxHeight + 20);
   }
   
-  // Draw particles if in final phase
-  if (phase > 0.6) {
-    let particleCount = 30;
-    for (let i = 0; i < particleCount; i++) {
-      let angle = random(TWO_PI);
-      let radius = random(unifiedStructure.size * 0.8, unifiedStructure.size * 1.2);
-      let x = cos(angle) * radius;
-      let y = sin(angle) * radius;
-      
-      fill(255, random(100, 200));
-      noStroke();
-      ellipse(x, y, random(2, 4));
-    }
+  // Add labels for left, right, and mid pointers
+  drawPointer(startX + leftIndex * boxWidth + boxWidth/2, startY + boxHeight + 40, "left", color(0, 255, 0));
+  drawPointer(startX + rightIndex * boxWidth + boxWidth/2, startY + boxHeight + 40, "right", color(255, 0, 0));
+  
+  if (animationState === "searching") {
+    drawPointer(startX + midIndex * boxWidth + boxWidth/2, startY + boxHeight + 40, "mid", color(255, 255, 0));
   }
   
-  // Add text at the final stage
-  if (phase > 0.8) {
-    let textAlpha = map(phase, 0.8, 1, 0, 255);
-    fill(255, textAlpha);
-    textSize(28);
-    text("Mathematical Unity", 0, unifiedStructure.size * 1.4);
-  }
-  
-  pop();
+  // Draw current status
+  fill(255);
+  textSize(20);
+  textAlign(CENTER);
+  text(message, width/2, height - 100);
 }
 
-function drawUnifiedStructureBase(phase) {
-  push();
-  translate(unifiedStructure.x, unifiedStructure.y);
-  rotate(unifiedStructure.rotation + time * 0.005);
+function drawPointer(x, y, label, pointerColor) {
+  fill(pointerColor);
+  textSize(14);
+  textAlign(CENTER);
+  text(label, x, y);
   
-  // Draw the base structure
+  // Triangle pointer
+  triangle(x - 8, y + 10, x + 8, y + 10, x, y + 20);
+}
+
+function updateSearch(progress) {
+  // Map progress to specific search steps (3 iterations)
+  let step;
+  
+  if (progress < 0.33) {
+    step = 0;
+  } else if (progress < 0.67) {
+    step = 1;
+  } else {
+    step = 2;
+  }
+  
+  // Perform binary search steps
+  if (step === 0) {
+    leftIndex = 0;
+    rightIndex = sortedArray.length - 1;
+    midIndex = Math.floor((leftIndex + rightIndex) / 2);
+    message = "Checking if " + sortedArray[midIndex] + " equals target " + targetValue;
+  } else if (step === 1) {
+    // Target is greater than mid, search right half
+    leftIndex = midIndex + 1;
+    midIndex = Math.floor((leftIndex + rightIndex) / 2);
+    message = "Target > mid value, searching right half";
+  } else if (step === 2) {
+    // Target is greater than mid, continue searching right half
+    leftIndex = midIndex + 1;
+    
+    if (leftIndex > rightIndex) {
+      message = "Search interval is now empty";
+      animationState = "notFound";
+    } else {
+      midIndex = Math.floor((leftIndex + rightIndex) / 2);
+      
+      if (sortedArray[midIndex] === targetValue) {
+        message = "Target found at index " + midIndex + "!";
+        animationState = "found";
+      } else {
+        message = "Continuing to shrink the search interval";
+      }
+    }
+  }
+  
+  // Draw the search interval label
+  textSize(18);
+  fill(200, 200, 255);
+  text("Current search interval: [" + leftIndex + ", " + rightIndex + "]", width/2, height - 150);
+}
+
+function drawFoundMessage() {
+  // Glowing effect for found message
+  let glowIntensity = 150 + sin(frameCount * 0.1) * 50;
+  
+  fill(100, 255, 100, glowIntensity);
+  textSize(28);
+  textAlign(CENTER);
+  text("Target Found at index " + midIndex + "!", width/2, height - 60);
+  
+  // Highlight the found element
+  let boxWidth = 50;
+  let startX = width/2 - (sortedArray.length * boxWidth)/2;
+  let startY = height/2 - 50;
+  
   noFill();
-  stroke(255, unifiedStructure.alpha);
-  strokeWeight(2);
-  
-  // Create complex geometric pattern
-  let points = 8;
-  let innerRadius = unifiedStructure.size * 0.5;
-  let outerRadius = unifiedStructure.size;
-  
-  // Draw outer shape
-  beginShape();
-  for (let i = 0; i < points; i++) {
-    let angle = map(i, 0, points, 0, TWO_PI);
-    let r = outerRadius * (0.9 + sin(angle * 3 + time * 0.03) * 0.1);
-    let x = cos(angle) * r;
-    let y = sin(angle) * r;
-    vertex(x, y);
-  }
-  endShape(CLOSE);
-  
-  // Draw inner shape
-  beginShape();
-  for (let i = 0; i < points; i++) {
-    let angle = map(i, 0, points, 0, TWO_PI) + PI/points;
-    let r = innerRadius * (0.9 + sin(angle * 3 + time * 0.03) * 0.1);
-    let x = cos(angle) * r;
-    let y = sin(angle) * r;
-    vertex(x, y);
-  }
-  endShape(CLOSE);
-  
-  // Connect inner and outer shapes
-  for (let i = 0; i < points/2; i++) {
-    let angle1 = map(i*2, 0, points, 0, TWO_PI);
-    let x1 = cos(angle1) * outerRadius;
-    let y1 = sin(angle1) * outerRadius;
-    
-    let angle2 = map(i*2, 0, points, 0, TWO_PI) + PI/points;
-    let x2 = cos(angle2) * innerRadius;
-    let y2 = sin(angle2) * innerRadius;
-    
-    line(x1, y1, x2, y2);
-  }
-  
-  pop();
+  strokeWeight(3);
+  stroke(0, 255, 0, 150 + sin(frameCount * 0.2) * 100);
+  rect(startX + midIndex * boxWidth - 5, startY - 5, boxWidth + 10, 50);
 }
 
-function drawMathSymbol(type, x, y, size) {
-  push();
-  translate(x, y);
+function drawNotFoundMessage() {
+  fill(255, 100, 100);
+  textSize(28);
+  textAlign(CENTER);
+  text("Target Not Found - Empty Interval", width/2, height - 60);
   
-  switch(type) {
-    case "pi":
-      textSize(size);
-      text("π", 0, 0);
-      break;
-      
-    case "sigma":
-      textSize(size);
-      text("Σ", 0, 0);
-      break;
-      
-    case "integral":
-      textSize(size);
-      text("∫", 0, 0);
-      break;
-      
-    case "infinity":
-      textSize(size);
-      text("∞", 0, 0);
-      break;
-      
-    case "graph":
-      noFill();
-      stroke(red(fill()), green(fill()), blue(fill()));
-      strokeWeight(2);
-      beginShape();
-      for (let i = -size/2; i <= size/2; i += 5) {
-        vertex(i, sin(i * 0.2) * size/4);
-      }
-      endShape();
-      break;
-      
-    case "matrix":
-      rectMode(CENTER);
-      noFill();
-      stroke(red(fill()), green(fill()), blue(fill()));
-      strokeWeight(2);
-      rect(0, 0, size*0.8, size);
-      for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
-          ellipse(i * size/4, j * size/4, size/10);
-        }
-      }
-      break;
-      
-    case "function":
-      textSize(size * 0.5);
-      text("f(x)", 0, 0);
-      break;
-      
-    case "set":
-      textSize(size);
-      text("{...}", 0, 0);
-      break;
-  }
-  
-  pop();
+  textSize(18);
+  fill(200, 200, 200);
+  text("The search interval has shrunk to nothing", width/2, height - 30);
 }
     </script>
   </body>

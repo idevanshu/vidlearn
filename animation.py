@@ -3,6 +3,19 @@ import base64
 from pathlib import Path
 from pyppeteer import launch
 from jinja2 import Template
+import signal
+
+async def safe_launch(*args, **kwargs):
+    original_signal = signal.signal
+
+    def silent_blocker(sig, handler):
+        print(f"⚠️ [SafeLaunch] Ignored signal registration for sig={sig}")
+
+    signal.signal = silent_blocker  # temporarily ignore
+    try:
+        return await launch(*args, **kwargs)
+    finally:
+        signal.signal = original_signal  # restore afterward
 
 def generate_html(js_code, output_html_path="temp_render.html"):
     template_text = Path("base.html").read_text()
@@ -16,7 +29,7 @@ def generate_html(js_code, output_html_path="temp_render.html"):
 async def record_animation(html_path, segment_id, duration):
     CHROME_PATH = "C:/Program Files/Google/Chrome/Application/chrome.exe"
 
-    browser = await launch(
+    browser = await safe_launch(
         headless=True,
         executablePath=CHROME_PATH,
         args=["--no-sandbox"]
