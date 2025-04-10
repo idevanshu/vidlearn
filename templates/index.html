@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SigmaLearn - Educational Animation + Quiz</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100">
+  <div class="container mx-auto p-6">
+    <h1 class="text-4xl font-bold text-center mb-8">
+      🎬 SigmaLearn - Educational Animation + Quiz
+    </h1>
+    <div id="progressLoader" class="hidden flex items-center justify-center mb-4">
+      <svg class="animate-spin h-6 w-6 text-blue-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none"
+        viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      <span id="progressText" class="text-blue-500 font-semibold"></span>
+    </div>
+    <div id="timerDisplay" class="text-center text-blue-500 font-semibold mb-4" style="display: none;">
+      Timer: <span id="timerCount">00:00</span>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
+      <form id="videoForm" enctype="multipart/form-data">
+        <div class="mb-4">
+          <label for="prompt" class="block text-gray-700 font-semibold mb-2">What concept do you want to learn?</label>
+          <textarea id="prompt" name="prompt" rows="4" placeholder="Example: Explain Newton's Laws"
+            class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+        </div>
+        <div class="mb-4">
+          <label for="attachment" class="block text-gray-700 font-semibold mb-2">Attach a PDF or image
+            (optional):</label>
+          <input type="file" id="attachment" name="attachment"
+            class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+        <div class="text-center">
+          <button type="button" id="generateVideo"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded">Generate Video</button>
+        </div>
+      </form>
+    </div>
+    <div id="videoSection" class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto mt-8" style="display: none;">
+      <h2 class="text-2xl font-bold mb-4">Generated Video</h2>
+      <video id="videoPlayer" class="w-full" controls>
+        <source id="videoSource" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      <div class="text-center mt-4">
+        <a id="downloadLink" href="" download
+          class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded inline-block">Download
+          Video</a>
+      </div>
+      <div class="text-center mt-4">
+        <button id="generateQuiz"
+          class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded">Generate Quiz</button>
+      </div>
+    </div>
+    <div id="quizSection" class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto mt-8" style="display: none;">
+      <h2 class="text-2xl font-bold mb-4">Quiz Based on the Video</h2>
+      <form id="quizForm"></form>
+      <div class="text-center mt-4">
+        <button id="submitQuiz" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">Submit
+          Quiz</button>
+      </div>
+      <div id="quizResult" class="mt-4 text-center font-bold"></div>
+    </div>
+    <div id="historySection" class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto mt-8">
+      <h2 class="text-2xl font-bold mb-4">History of Completed Videos</h2>
+      <ul id="historyList" class="list-disc pl-5"></ul>
+      <div class="text-center mt-4">
+        <button id="refreshHistory"
+          class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded">Refresh History</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    let scriptData = null;
+    let quizData = null;
+    let progressInterval = null;
+    let timerInterval = null;
+    let elapsedSeconds = 0;
+
+    function showLoader(message) {
+      const loader = document.getElementById('progressLoader');
+      const progressText = document.getElementById('progressText');
+      progressText.innerText = message;
+      loader.style.display = 'flex';
+    }
+
+    function hideLoader() {
+      document.getElementById('progressLoader').style.display = 'none';
+    }
+
+    function startProgressPolling() {
+      progressInterval = setInterval(async () => {
+        try {
+          const res = await fetch('/progress');
+          const progress = await res.json();
+          const progressText = `${progress.step}${progress.segment ? " - " + progress.segment : ""}: ${progress.message}`;
+          document.getElementById('progressText').innerText = progressText;
+        } catch (err) {
+          console.error("Error fetching progress:", err);
+        }
+      }, 1000);
+    }
+
+    function stopProgressPolling() {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
+    }
+
+    function startTimer() {
+      elapsedSeconds = 0;
+      document.getElementById('timerDisplay').style.display = 'block';
+      document.getElementById('timerCount').innerText = "00:00";
+      timerInterval = setInterval(() => {
+        elapsedSeconds++;
+        const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+        const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
+        document.getElementById('timerCount').innerText = `${minutes}:${seconds}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    document.getElementById('generateVideo').addEventListener('click', async () => {
+      const formData = new FormData(document.getElementById('videoForm'));
+      const prompt = formData.get('prompt').trim();
+      if (!prompt) {
+        alert("Please enter a topic");
+        return;
+      }
+      showLoader("Starting video generation...");
+      startProgressPolling();
+      startTimer();
+      try {
+        const response = await fetch('/generate-video', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+        stopTimer();
+        if (data.success) {
+          scriptData = data.script;
+          const videoUrl = `/download-video?filename=${data.filename}`;
+          document.getElementById('videoSource').src = videoUrl;
+          document.getElementById('videoPlayer').load();
+          document.getElementById('downloadLink').href = videoUrl;
+          document.getElementById('videoSection').style.display = 'block';
+          hideLoader();
+          stopProgressPolling();
+        } else {
+          hideLoader();
+          stopProgressPolling();
+          alert("Video generation failed: " + data.error + " (Step: " + data.step + ")");
+        }
+      } catch (err) {
+        stopTimer();
+        hideLoader();
+        stopProgressPolling();
+        console.error(err);
+        alert("Error generating video");
+      }
+    });
+
+    document.getElementById('generateQuiz').addEventListener('click', async () => {
+      if (!scriptData) {
+        alert("No script available for quiz generation");
+        return;
+      }
+      showLoader("Generating quiz...");
+      try {
+        const response = await fetch('/generate-quiz', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ script: scriptData })
+        });
+        const data = await response.json();
+        if (data.success) {
+          quizData = data.quiz;
+          displayQuiz(quizData);
+          document.getElementById('quizSection').style.display = 'block';
+          hideLoader();
+        } else {
+          hideLoader();
+          alert("Quiz generation failed: " + data.error + " (Step: " + data.step + ")");
+        }
+      } catch (err) {
+        hideLoader();
+        console.error(err);
+        alert("Error generating quiz");
+      }
+    });
+
+    function displayQuiz(quiz) {
+      const quizForm = document.getElementById('quizForm');
+      quizForm.innerHTML = '';
+      quiz.forEach((q, index) => {
+        const questionDiv = document.createElement('div');
+        questionDiv.className = "mb-4 p-4 border rounded";
+        const questionText = document.createElement('p');
+        questionText.className = "font-semibold text-lg";
+        questionText.innerHTML = `Q${index + 1}. ${q[0].trim()}`;
+        questionDiv.appendChild(questionText);
+        const options = [q[1].trim(), q[2].trim(), q[3].trim(), q[4].trim()];
+        options.forEach((option, i) => {
+          const optionDiv = document.createElement('div');
+          optionDiv.className = "mt-2";
+          const label = document.createElement('label');
+          label.className = "inline-flex items-center";
+          const radio = document.createElement('input');
+          radio.type = 'radio';
+          radio.name = 'question-' + index;
+          radio.value = ["A", "B", "C", "D"][i];
+          radio.className = "form-radio text-indigo-600";
+          label.appendChild(radio);
+          label.appendChild(document.createTextNode(" " + option));
+          optionDiv.appendChild(label);
+          questionDiv.appendChild(optionDiv);
+        });
+        quizForm.appendChild(questionDiv);
+      });
+    }
+
+    document.getElementById('submitQuiz').addEventListener('click', () => {
+      if (!quizData) return;
+      let score = 0;
+      quizData.forEach((q, index) => {
+        const options = document.getElementsByName('question-' + index);
+        let selected = null;
+        options.forEach((option) => {
+          if (option.checked) {
+            selected = option.value;
+          }
+        });
+        if (selected === q[5]) {
+          score++;
+        }
+      });
+      document.getElementById('quizResult').innerText = `You scored ${score} out of ${quizData.length}`;
+    });
+
+    async function fetchHistory() {
+      try {
+        const res = await fetch('/history');
+        const videos = await res.json();
+        const historyList = document.getElementById('historyList');
+        historyList.innerHTML = "";
+        if (videos.length === 0) {
+          historyList.innerHTML = "<li>No completed videos found.</li>";
+        } else {
+          videos.forEach(video => {
+            const li = document.createElement('li');
+            const link = document.createElement('a');
+            link.href = `/download-video?filename=${video.filename}`;
+            link.innerText = video.filename;
+            link.className = "text-blue-500 hover:underline";
+            li.appendChild(link);
+            historyList.appendChild(li);
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching history:", err);
+      }
+    }
+
+    document.getElementById('refreshHistory').addEventListener('click', fetchHistory);
+
+    window.addEventListener('load', fetchHistory);
+  </script>
+</body>
+
+</html>
