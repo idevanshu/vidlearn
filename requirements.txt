@@ -1,0 +1,11 @@
+streamlit
+openai
+anthropic
+jinja2
+pyppeteer
+google-generativeai
+python-dotenv
+flask-cors
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Login
