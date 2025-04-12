@@ -3,6 +3,7 @@ anthropic
 jinja2
 pyppeteer
 google-generativeai
+redis
 python-dotenv
 flask-cors
 Flask-SQLAlchemy

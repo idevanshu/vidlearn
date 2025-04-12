@@ -3,3 +3,11 @@
 output/
 segments/
 migrations/
+instance/
+final_videos/
+voice/
+# dependencies
+/node_modules
+
+# production
+/build
