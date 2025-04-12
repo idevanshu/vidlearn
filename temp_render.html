@@ -25,209 +25,270 @@
   </head>
   <body>
     <script>
-      const WIDTH = 800;
-const HEIGHT = 600;
-const ARRAY_SIZE = 40;
-const ELEMENT_SIZE = 18;
-const GRID_X = 100;
-const GRID_Y = 150;
-const ANIMATION_DURATION = 240; // 4 seconds at 60fps
-
-let elements = [];
-let linearSteps = [];
-let binarySteps = [];
-let animationProgress = 0;
-let targetIndex = Math.floor(ARRAY_SIZE * 0.8); // Target near the end for linear search
-
-function setup() {
-  createCanvas(WIDTH, HEIGHT);
+      function setup() {
+  createCanvas(800, 600);
   frameRate(60);
-  textAlign(CENTER, CENTER);
+  noLoop();
   
-  // Create sorted array
-  for (let i = 0; i < ARRAY_SIZE; i++) {
-    elements.push(i);
-  }
-  
-  // Prepare linear search steps
-  for (let i = 0; i <= targetIndex; i++) {
-    linearSteps.push(i);
-  }
-  
-  // Prepare binary search steps
-  let left = 0;
-  let right = ARRAY_SIZE - 1;
-  while (left <= right) {
-    let mid = Math.floor((left + right) / 2);
-    binarySteps.push(mid);
-    if (elements[mid] < targetIndex) {
-      left = mid + 1;
-    } else if (elements[mid] > targetIndex) {
-      right = mid - 1;
-    } else {
-      break;
-    }
-  }
+  // Initialize animation
+  startAnimation();
+}
+
+let startTime = 0;
+let duration = 4000; // 4 seconds
+let animationStarted = false;
+
+function startAnimation() {
+  startTime = millis();
+  animationStarted = true;
+  loop();
 }
 
 function draw() {
   background(0);
   
-  // Progress the animation
-  if (animationProgress < ANIMATION_DURATION) {
-    animationProgress++;
-  }
+  if (!animationStarted) return;
   
-  const progress = animationProgress / ANIMATION_DURATION;
-  
-  // Draw title
-  fill(255);
-  textSize(32);
-  text("Search Algorithm Comparison", WIDTH/2, 50);
-  
-  // Draw array elements
-  drawArray();
-  
-  // Draw search paths
-  drawLinearSearch(progress);
-  drawBinarySearch(progress);
-  
-  // Draw labels
-  textSize(24);
-  fill(255, 80, 80);
-  text("Linear Search", WIDTH/4, 450);
-  fill(80, 180, 255);
-  text("Binary Search", 3*WIDTH/4, 450);
-  
-  // Draw efficiency comparison
-  drawEfficiencyComparison(progress);
+  let elapsedTime = millis() - startTime;
+  let progress = constrain(elapsedTime / duration, 0, 1);
   
   // Stop animation when complete
-  if (animationProgress >= ANIMATION_DURATION) {
+  if (progress >= 1) {
     noLoop();
   }
+  
+  // Draw the scene
+  drawFiberScene(progress);
 }
 
-function drawArray() {
-  textSize(16);
-  for (let i = 0; i < ARRAY_SIZE; i++) {
-    const x = GRID_X + i * ELEMENT_SIZE;
-    const y = GRID_Y;
+function drawFiberScene(progress) {
+  push();
+  // Set up general styling
+  noFill();
+  strokeWeight(3);
+  
+  // Draw fiber optic cable path
+  drawFiberPath(progress);
+  
+  // Draw light beam
+  drawLightBeam(progress);
+  
+  // Draw internet symbols at the end
+  if (progress > 0.7) {
+    drawInternetSymbols(progress);
+  }
+  
+  // Draw obstacles and interference
+  drawObstacles(progress);
+  
+  // Draw labels
+  drawLabels(progress);
+  pop();
+}
+
+function drawFiberPath(progress) {
+  // Draw the fiber cable
+  stroke(30, 150, 200, 200);
+  strokeWeight(12);
+  let pathLength = 700 * min(1, progress * 1.2);
+  line(50, 300, 50 + pathLength, 300);
+  
+  // Cable cladding/outline
+  stroke(100, 200, 255, 100);
+  strokeWeight(16);
+  line(50, 300, 50 + pathLength, 300);
+}
+
+function drawLightBeam(progress) {
+  let beamPos = 50 + min(700, progress * 2.5 * 700);
+  
+  // Bright central beam
+  for (let i = 0; i < 5; i++) {
+    let alpha = 255 - i * 50;
+    stroke(255, 255, 200, alpha);
+    strokeWeight(3 - i * 0.5);
     
-    noFill();
-    stroke(100);
-    rect(x, y, ELEMENT_SIZE, ELEMENT_SIZE);
+    // Calculate beam path with slight oscillation but always progressing
+    let baseY = 300;
+    let amplitude = 0; // Start with no oscillation
     
-    fill(200);
-    noStroke();
-    text(i, x + ELEMENT_SIZE/2, y + ELEMENT_SIZE/2);
+    // After the first obstacle (25% progress), add slight oscillation
+    if (beamPos > 250) {
+      amplitude = 2;
+    }
     
-    // Highlight target element
-    if (i === targetIndex) {
-      noFill();
-      stroke(255, 255, 0);
-      strokeWeight(2);
-      rect(x - 1, y - 1, ELEMENT_SIZE + 2, ELEMENT_SIZE + 2);
-      strokeWeight(1);
+    // After the second obstacle (50% progress), slightly more oscillation but quickly stabilizes
+    if (beamPos > 450) {
+      amplitude = 4 * (1 - min(1, (beamPos - 450) / 100)); // Oscillation decreases as beam progresses
+    }
+    
+    // Draw the main light beam
+    beginShape();
+    for (let x = 50; x < beamPos; x += 5) {
+      let offset = sin((x - 50) * 0.1) * amplitude;
+      vertex(x, baseY + offset);
+    }
+    endShape();
+    
+    // Draw light particles following the beam
+    if (progress > 0.2) {
+      drawLightParticles(progress, amplitude, baseY);
     }
   }
   
-  // Draw target label
-  fill(255, 255, 0);
-  textSize(18);
-  text("Target", GRID_X + targetIndex * ELEMENT_SIZE + ELEMENT_SIZE/2, GRID_Y - 20);
+  // Glow effect at beam head
+  drawBeamHead(beamPos, 300);
 }
 
-function drawLinearSearch(progress) {
-  const stepsToShow = Math.floor(linearSteps.length * progress);
+function drawBeamHead(x, y) {
+  // Bright center
+  fill(255, 255, 200);
+  noStroke();
+  ellipse(x, y, 10, 10);
   
-  stroke(255, 80, 80);
-  strokeWeight(2);
-  noFill();
-  
-  // Draw linear search path
-  beginShape();
-  for (let i = 0; i < stepsToShow; i++) {
-    const stepIndex = linearSteps[i];
-    const x = GRID_X + stepIndex * ELEMENT_SIZE + ELEMENT_SIZE/2;
-    const y = GRID_Y + ELEMENT_SIZE/2;
-    vertex(x, y);
+  // Outer glow
+  for (let i = 0; i < 4; i++) {
+    fill(255, 255, 200, 80 - i * 20);
+    ellipse(x, y, 14 + i * 5, 14 + i * 5);
   }
-  endShape();
+}
+
+function drawLightParticles(progress, amplitude, baseY) {
+  noStroke();
   
-  // Draw circles at each step
-  for (let i = 0; i < stepsToShow; i++) {
-    const stepIndex = linearSteps[i];
-    const x = GRID_X + stepIndex * ELEMENT_SIZE + ELEMENT_SIZE/2;
-    const y = GRID_Y + ELEMENT_SIZE/2;
+  // Number of particles increases as animation progresses
+  let particleCount = int(progress * 40);
+  
+  for (let i = 0; i < particleCount; i++) {
+    let x = 50 + (i / particleCount) * 700 * min(1, progress * 1.5);
+    let offset = sin((x - 50) * 0.1) * amplitude;
+    let y = baseY + offset;
     
-    fill(255, 80, 80, 150);
-    ellipse(x, y, 12, 12);
-  }
-  
-  // Linear search stats
-  fill(255, 80, 80);
-  textSize(20);
-  text(`Steps: ${stepsToShow > 0 ? stepsToShow : 0}`, WIDTH/4, 500);
-}
-
-function drawBinarySearch(progress) {
-  const stepsToShow = Math.floor(binarySteps.length * progress);
-  
-  stroke(80, 180, 255);
-  strokeWeight(2);
-  noFill();
-  
-  // Draw binary search path
-  beginShape();
-  for (let i = 0; i < stepsToShow; i++) {
-    const stepIndex = binarySteps[i];
-    const x = GRID_X + stepIndex * ELEMENT_SIZE + ELEMENT_SIZE/2;
-    const y = GRID_Y + ELEMENT_SIZE/2;
-    vertex(x, y);
-  }
-  endShape();
-  
-  // Draw circles at each step
-  for (let i = 0; i < stepsToShow; i++) {
-    const stepIndex = binarySteps[i];
-    const x = GRID_X + stepIndex * ELEMENT_SIZE + ELEMENT_SIZE/2;
-    const y = GRID_Y + ELEMENT_SIZE/2;
+    // Particle flicker effect
+    let flicker = sin(frameCount * 0.1 + i * 0.5) * 0.5 + 0.5;
     
-    fill(80, 180, 255, 150);
-    ellipse(x, y, 12, 12);
+    fill(255, 255, 200, 150 * flicker);
+    ellipse(x, y, 3, 3);
   }
-  
-  // Binary search stats
-  fill(80, 180, 255);
-  textSize(20);
-  text(`Steps: ${stepsToShow > 0 ? stepsToShow : 0}`, 3*WIDTH/4, 500);
 }
 
-function drawEfficiencyComparison(progress) {
-  const barWidth = 80;
-  const maxBarHeight = 200;
+function drawObstacles(progress) {
+  // First obstacle (wireless interference)
+  if (progress > 0.25) {
+    let alpha = constrain(map(progress, 0.25, 0.35, 0, 255), 0, 255);
+    
+    // Wireless waves that the beam passes through
+    stroke(255, 100, 80, alpha);
+    strokeWeight(1);
+    
+    for (let i = 0; i < 3; i++) {
+      let waveY = 300 - 50 + i * 50;
+      let waveHeight = 100 - i * 20;
+      
+      beginShape();
+      for (let x = 200; x < 300; x += 5) {
+        let y = waveY + sin((x - 200) * 0.1 + frameCount * 0.05) * waveHeight * 0.5;
+        vertex(x, y);
+      }
+      endShape();
+    }
+    
+    // Show the beam passing through unaffected
+    if (progress > 0.3) {
+      let fadeOut = constrain(map(progress, 0.3, 0.4, 1, 0), 0, 1);
+      stroke(255, 100, 80, alpha * fadeOut);
+      
+      // Wireless interference fades out as the beam passes through reliably
+      for (let i = 0; i < 3; i++) {
+        let waveY = 300 - 50 + i * 50;
+        let waveHeight = 100 - i * 20;
+        
+        beginShape();
+        for (let x = 200; x < 300; x += 5) {
+          let y = waveY + sin((x - 200) * 0.1 + frameCount * 0.05) * waveHeight * 0.5 * fadeOut;
+          vertex(x, y);
+        }
+        endShape();
+      }
+    }
+  }
   
-  // Linear search efficiency bar
-  const linearHeight = maxBarHeight * progress;
-  fill(255, 80, 80, 180);
-  rect(WIDTH/4 - barWidth/2, 350 - linearHeight, barWidth, linearHeight);
+  // Second obstacle (physical interference)
+  if (progress > 0.5) {
+    let alpha = constrain(map(progress, 0.5, 0.6, 0, 255), 0, 255);
+    
+    // Physical obstacle
+    fill(120, 120, 120, alpha);
+    noStroke();
+    rect(400, 270, 30, 60, 5);
+    
+    // The beam maintains strength as it passes through/around
+    if (progress > 0.55) {
+      let fadeOut = constrain(map(progress, 0.55, 0.65, 1, 0), 0, 1);
+      fill(120, 120, 120, alpha * fadeOut);
+      rect(400, 270, 30, 60, 5);
+    }
+  }
+}
+
+function drawInternetSymbols(progress) {
+  let alpha = constrain(map(progress, 0.7, 0.9, 0, 255), 0, 255);
   
-  // Binary search efficiency bar
-  const binaryHeight = (maxBarHeight * progress) * (binarySteps.length / linearSteps.length);
-  fill(80, 180, 255, 180);
-  rect(3*WIDTH/4 - barWidth/2, 350 - binaryHeight, barWidth, binaryHeight);
+  push();
+  translate(700, 300);
   
-  // Speed comparison
-  fill(255);
-  textSize(16);
-  text("Search Space", WIDTH/2, 360);
+  // Show connection reliability with cloud/server icon
+  fill(200, 230, 255, alpha);
+  noStroke();
   
-  const speedupFactor = linearSteps.length / binarySteps.length;
-  fill(80, 255, 80);
-  textSize(22);
-  if (progress > 0.7) {
-    text(`Binary search is ~${speedupFactor.toFixed(1)}x faster!`, WIDTH/2, 400);
+  // Cloud shape
+  ellipse(-10, -10, 40, 30);
+  ellipse(10, -15, 35, 25);
+  ellipse(20, -5, 30, 30);
+  ellipse(0, 0, 50, 35);
+  
+  // Data packets flowing
+  if (progress > 0.8) {
+    let packetAlpha = constrain(map(progress, 0.8, 0.9, 0, 255), 0, 255);
+    
+    for (let i = 0; i < 4; i++) {
+      let offset = (frameCount * 3 + i * 20) % 100;
+      let x = -offset - 20;
+      
+      fill(255, 255, 200, packetAlpha);
+      rect(x, 0, 10, 5, 2);
+    }
+  }
+  
+  pop();
+}
+
+function drawLabels(progress) {
+  // Title appears first
+  if (progress > 0.1) {
+    let titleAlpha = constrain(map(progress, 0.1, 0.2, 0, 255), 0, 255);
+    fill(255, titleAlpha);
+    textSize(28);
+    textAlign(CENTER);
+    text("Fiber Internet Connection", width/2, 100);
+  }
+  
+  // "Reliable Connection" label appears after beam passes first obstacle
+  if (progress > 0.4) {
+    let reliableAlpha = constrain(map(progress, 0.4, 0.5, 0, 255), 0, 255);
+    fill(255, reliableAlpha);
+    textSize(20);
+    textAlign(CENTER);
+    text("Reliable Connection", width/2, 150);
+  }
+  
+  // "Minimal Interference" label appears after beam passes second obstacle
+  if (progress > 0.65) {
+    let minimalAlpha = constrain(map(progress, 0.65, 0.75, 0, 255), 0, 255);
+    fill(255, minimalAlpha);
+    textSize(20);
+    textAlign(CENTER);
+    text("Minimal Interference", width/2, 180);
   }
 }
     </script>
