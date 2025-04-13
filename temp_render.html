@@ -25,272 +25,325 @@
   </head>
   <body>
     <script>
-      function setup() {
-  createCanvas(800, 600);
-  frameRate(60);
-  noLoop();
+      let sketch = function(p) {
+  // Initial setup and variables
+  let time = 0;
+  let duration = 6;
+  let maxFrames = duration * 60;
+  let stars = [];
+  let lightRays = [];
+  let satellites = [];
+  let galaxies = [];
   
-  // Initialize animation
-  startAnimation();
-}
-
-let startTime = 0;
-let duration = 4000; // 4 seconds
-let animationStarted = false;
-
-function startAnimation() {
-  startTime = millis();
-  animationStarted = true;
-  loop();
-}
-
-function draw() {
-  background(0);
-  
-  if (!animationStarted) return;
-  
-  let elapsedTime = millis() - startTime;
-  let progress = constrain(elapsedTime / duration, 0, 1);
-  
-  // Stop animation when complete
-  if (progress >= 1) {
-    noLoop();
-  }
-  
-  // Draw the scene
-  drawFiberScene(progress);
-}
-
-function drawFiberScene(progress) {
-  push();
-  // Set up general styling
-  noFill();
-  strokeWeight(3);
-  
-  // Draw fiber optic cable path
-  drawFiberPath(progress);
-  
-  // Draw light beam
-  drawLightBeam(progress);
-  
-  // Draw internet symbols at the end
-  if (progress > 0.7) {
-    drawInternetSymbols(progress);
-  }
-  
-  // Draw obstacles and interference
-  drawObstacles(progress);
-  
-  // Draw labels
-  drawLabels(progress);
-  pop();
-}
-
-function drawFiberPath(progress) {
-  // Draw the fiber cable
-  stroke(30, 150, 200, 200);
-  strokeWeight(12);
-  let pathLength = 700 * min(1, progress * 1.2);
-  line(50, 300, 50 + pathLength, 300);
-  
-  // Cable cladding/outline
-  stroke(100, 200, 255, 100);
-  strokeWeight(16);
-  line(50, 300, 50 + pathLength, 300);
-}
-
-function drawLightBeam(progress) {
-  let beamPos = 50 + min(700, progress * 2.5 * 700);
-  
-  // Bright central beam
-  for (let i = 0; i < 5; i++) {
-    let alpha = 255 - i * 50;
-    stroke(255, 255, 200, alpha);
-    strokeWeight(3 - i * 0.5);
+  p.setup = function() {
+    p.createCanvas(800, 600);
+    p.frameRate(60);
     
-    // Calculate beam path with slight oscillation but always progressing
-    let baseY = 300;
-    let amplitude = 0; // Start with no oscillation
-    
-    // After the first obstacle (25% progress), add slight oscillation
-    if (beamPos > 250) {
-      amplitude = 2;
+    // Create stars
+    for (let i = 0; i < 100; i++) {
+      stars.push({
+        x: p.random(p.width),
+        y: p.random(p.height),
+        size: p.random(1, 3),
+        brightness: p.random(150, 255)
+      });
     }
     
-    // After the second obstacle (50% progress), slightly more oscillation but quickly stabilizes
-    if (beamPos > 450) {
-      amplitude = 4 * (1 - min(1, (beamPos - 450) / 100)); // Oscillation decreases as beam progresses
+    // Create light bending rays
+    for (let i = 0; i < 5; i++) {
+      lightRays.push({
+        x: p.random(200, 600),
+        y: p.random(150, 450),
+        length: p.random(80, 150),
+        angle: p.random(p.TWO_PI),
+        bend: p.random(0.2, 0.5)
+      });
     }
     
-    // Draw the main light beam
-    beginShape();
-    for (let x = 50; x < beamPos; x += 5) {
-      let offset = sin((x - 50) * 0.1) * amplitude;
-      vertex(x, baseY + offset);
-    }
-    endShape();
-    
-    // Draw light particles following the beam
-    if (progress > 0.2) {
-      drawLightParticles(progress, amplitude, baseY);
-    }
-  }
-  
-  // Glow effect at beam head
-  drawBeamHead(beamPos, 300);
-}
-
-function drawBeamHead(x, y) {
-  // Bright center
-  fill(255, 255, 200);
-  noStroke();
-  ellipse(x, y, 10, 10);
-  
-  // Outer glow
-  for (let i = 0; i < 4; i++) {
-    fill(255, 255, 200, 80 - i * 20);
-    ellipse(x, y, 14 + i * 5, 14 + i * 5);
-  }
-}
-
-function drawLightParticles(progress, amplitude, baseY) {
-  noStroke();
-  
-  // Number of particles increases as animation progresses
-  let particleCount = int(progress * 40);
-  
-  for (let i = 0; i < particleCount; i++) {
-    let x = 50 + (i / particleCount) * 700 * min(1, progress * 1.5);
-    let offset = sin((x - 50) * 0.1) * amplitude;
-    let y = baseY + offset;
-    
-    // Particle flicker effect
-    let flicker = sin(frameCount * 0.1 + i * 0.5) * 0.5 + 0.5;
-    
-    fill(255, 255, 200, 150 * flicker);
-    ellipse(x, y, 3, 3);
-  }
-}
-
-function drawObstacles(progress) {
-  // First obstacle (wireless interference)
-  if (progress > 0.25) {
-    let alpha = constrain(map(progress, 0.25, 0.35, 0, 255), 0, 255);
-    
-    // Wireless waves that the beam passes through
-    stroke(255, 100, 80, alpha);
-    strokeWeight(1);
-    
+    // Create satellites
     for (let i = 0; i < 3; i++) {
-      let waveY = 300 - 50 + i * 50;
-      let waveHeight = 100 - i * 20;
-      
-      beginShape();
-      for (let x = 200; x < 300; x += 5) {
-        let y = waveY + sin((x - 200) * 0.1 + frameCount * 0.05) * waveHeight * 0.5;
-        vertex(x, y);
-      }
-      endShape();
+      satellites.push({
+        x: p.random(p.width),
+        y: p.random(150, 250),
+        size: p.random(10, 15),
+        speed: p.random(0.5, 1),
+        orbitRadius: p.random(50, 100),
+        orbitCenterX: p.random(200, 600),
+        orbitCenterY: p.random(200, 400),
+        angle: p.random(p.TWO_PI)
+      });
     }
     
-    // Show the beam passing through unaffected
-    if (progress > 0.3) {
-      let fadeOut = constrain(map(progress, 0.3, 0.4, 1, 0), 0, 1);
-      stroke(255, 100, 80, alpha * fadeOut);
+    // Create galaxies for astronomical observations
+    for (let i = 0; i < 2; i++) {
+      galaxies.push({
+        x: p.random(150, 650),
+        y: p.random(150, 450),
+        size: p.random(60, 100),
+        rotation: p.random(p.TWO_PI),
+        arms: p.floor(p.random(3, 6))
+      });
+    }
+  };
+
+  p.draw = function() {
+    p.background(0);
+    time = p.frameCount / maxFrames;
+    
+    // Progress phases based on time
+    let phase1End = 0.33;
+    let phase2End = 0.66;
+    
+    // Calculate current focus
+    let starFocus = 0;
+    let satelliteFocus = 0;
+    let galaxyFocus = 0;
+    
+    if (time < phase1End) {
+      starFocus = p.map(time, 0, phase1End, 0, 1);
+      if (time > phase1End/2) starFocus = p.map(time, phase1End/2, phase1End, 1, 0.3);
+    } else if (time < phase2End) {
+      starFocus = 0.3;
+      satelliteFocus = p.map(time, phase1End, phase2End, 0, 1);
+      if (time > (phase1End + phase2End)/2) satelliteFocus = p.map(time, (phase1End + phase2End)/2, phase2End, 1, 0.3);
+    } else {
+      starFocus = 0.3;
+      satelliteFocus = 0.3;
+      galaxyFocus = p.map(time, phase2End, 1, 0, 1);
+    }
+    
+    // Draw stars and light bending (more visible in first phase)
+    drawStarsAndLightBending(starFocus);
+    
+    // Draw GPS satellites (more visible in second phase)
+    drawSatellites(satelliteFocus);
+    
+    // Draw astronomical observations (more visible in last phase)
+    drawGalaxies(galaxyFocus);
+    
+    // Stop the animation when it reaches the end
+    if (p.frameCount >= maxFrames) {
+      p.noLoop();
+    }
+  };
+  
+  function drawStarsAndLightBending(intensity) {
+    // Draw background stars
+    for (let star of stars) {
+      p.fill(255, star.brightness * 0.3);
+      p.noStroke();
+      p.ellipse(star.x, star.y, star.size);
+    }
+    
+    // Only draw light bending when this part is in focus
+    if (intensity > 0.1) {
+      // Draw a massive star
+      let massiveStarX = 400;
+      let massiveStarY = 250;
+      let glowRadius = 40 + 5 * p.sin(time * 5);
       
-      // Wireless interference fades out as the beam passes through reliably
-      for (let i = 0; i < 3; i++) {
-        let waveY = 300 - 50 + i * 50;
-        let waveHeight = 100 - i * 20;
+      // Draw glow
+      for (let r = glowRadius; r > 0; r -= 2) {
+        p.fill(255, 200, 100, 150 * intensity * (r/glowRadius));
+        p.ellipse(massiveStarX, massiveStarY, r);
+      }
+      
+      // Draw core
+      p.fill(255, 240, 200, 255 * intensity);
+      p.ellipse(massiveStarX, massiveStarY, 25);
+      
+      // Draw bending light rays
+      p.strokeWeight(2);
+      for (let i = 0; i < 12; i++) {
+        let angle = i * p.TWO_PI / 12 + time * 0.2;
+        let rayLength = 150 + 20 * p.sin(time * 3 + i);
+        let startX = massiveStarX + p.cos(angle) * 40;
+        let startY = massiveStarY + p.sin(angle) * 40;
         
-        beginShape();
-        for (let x = 200; x < 300; x += 5) {
-          let y = waveY + sin((x - 200) * 0.1 + frameCount * 0.05) * waveHeight * 0.5 * fadeOut;
-          vertex(x, y);
+        p.stroke(255, 240, 200, 150 * intensity);
+        p.noFill();
+        p.beginShape();
+        for (let t = 0; t <= 1; t += 0.05) {
+          // Create curved path to simulate light bending
+          let r = 40 + rayLength * t;
+          let bendFactor = 0.2 * (1 - t); // Light bends more near the star
+          let curvedAngle = angle + bendFactor * p.sin(angle * 2);
+          let x = massiveStarX + p.cos(curvedAngle) * r;
+          let y = massiveStarY + p.sin(curvedAngle) * r;
+          p.vertex(x, y);
         }
-        endShape();
+        p.endShape();
       }
-    }
-  }
-  
-  // Second obstacle (physical interference)
-  if (progress > 0.5) {
-    let alpha = constrain(map(progress, 0.5, 0.6, 0, 255), 0, 255);
-    
-    // Physical obstacle
-    fill(120, 120, 120, alpha);
-    noStroke();
-    rect(400, 270, 30, 60, 5);
-    
-    // The beam maintains strength as it passes through/around
-    if (progress > 0.55) {
-      let fadeOut = constrain(map(progress, 0.55, 0.65, 1, 0), 0, 1);
-      fill(120, 120, 120, alpha * fadeOut);
-      rect(400, 270, 30, 60, 5);
-    }
-  }
-}
-
-function drawInternetSymbols(progress) {
-  let alpha = constrain(map(progress, 0.7, 0.9, 0, 255), 0, 255);
-  
-  push();
-  translate(700, 300);
-  
-  // Show connection reliability with cloud/server icon
-  fill(200, 230, 255, alpha);
-  noStroke();
-  
-  // Cloud shape
-  ellipse(-10, -10, 40, 30);
-  ellipse(10, -15, 35, 25);
-  ellipse(20, -5, 30, 30);
-  ellipse(0, 0, 50, 35);
-  
-  // Data packets flowing
-  if (progress > 0.8) {
-    let packetAlpha = constrain(map(progress, 0.8, 0.9, 0, 255), 0, 255);
-    
-    for (let i = 0; i < 4; i++) {
-      let offset = (frameCount * 3 + i * 20) % 100;
-      let x = -offset - 20;
       
-      fill(255, 255, 200, packetAlpha);
-      rect(x, 0, 10, 5, 2);
+      // Add "Light Bending" label
+      p.fill(255, 255 * intensity);
+      p.textSize(18);
+      p.textAlign(p.CENTER);
+      p.text("Light Bending around Massive Objects", massiveStarX, massiveStarY + 120);
     }
   }
   
-  pop();
-}
+  function drawSatellites(intensity) {
+    if (intensity > 0.1) {
+      // Draw Earth
+      let earthX = 400;
+      let earthY = 380;
+      let earthRadius = 80;
+      
+      // Earth glow
+      for (let r = earthRadius + 10; r > earthRadius; r -= 2) {
+        p.fill(100, 150, 255, 30 * intensity);
+        p.ellipse(earthX, earthY, r * 2);
+      }
+      
+      // Earth
+      p.fill(50, 100, 200, 255 * intensity);
+      p.ellipse(earthX, earthY, earthRadius * 2);
+      
+      // Orbit paths
+      p.noFill();
+      p.stroke(255, 50 * intensity);
+      p.strokeWeight(1);
+      for (let i = 0; i < 3; i++) {
+        let orbitHeight = 130 + i * 30;
+        p.ellipse(earthX, earthY, orbitHeight * 2, orbitHeight * 2);
+      }
+      
+      // Satellites
+      p.strokeWeight(1);
+      for (let i = 0; i < satellites.length; i++) {
+        let sat = satellites[i];
+        
+        // Update satellite position
+        sat.angle += 0.005 * sat.speed;
+        let orbitHeight = 130 + i * 30;
+        let sx = earthX + p.cos(sat.angle) * orbitHeight;
+        let sy = earthY + p.sin(sat.angle) * orbitHeight;
+        
+        // Draw satellite
+        p.push();
+        p.translate(sx, sy);
+        p.rotate(sat.angle + p.PI/2);
+        
+        // Satellite body
+        p.fill(200, 200, 200, 255 * intensity);
+        p.rect(-5, -8, 10, 16);
+        
+        // Solar panels
+        p.fill(70, 130, 230, 255 * intensity);
+        p.rect(-20, -5, 15, 10);
+        p.rect(5, -5, 15, 10);
+        
+        // Antenna
+        p.stroke(200, 200, 200, 255 * intensity);
+        p.line(0, -8, 0, -15);
+        p.noStroke();
+        p.fill(200, 200, 200, 255 * intensity);
+        p.ellipse(0, -15, 3, 3);
+        
+        p.pop();
+        
+        // Signal waves from satellite to Earth
+        p.stroke(255, 100, 100, 100 * intensity * (0.5 + 0.5 * p.sin(time * 10 + i * 2)));
+        p.strokeWeight(1);
+        p.line(sx, sy, earthX, earthY);
+        
+        // Pulsing signal circles
+        let signalPhase = (time * 3 + i * 0.33) % 1;
+        let signalSize = p.map(signalPhase, 0, 1, 0, p.dist(sx, sy, earthX, earthY));
+        p.noFill();
+        p.stroke(255, 100, 100, 100 * intensity * (1 - signalPhase));
+        p.ellipse(sx, sy, signalSize * 2);
+      }
+      
+      // Add "GPS Satellites" label
+      p.fill(255, 255 * intensity);
+      p.textSize(18);
+      p.textAlign(p.CENTER);
+      p.text("GPS Satellites Using Relativity", earthX, earthY - 140);
+    }
+  }
+  
+  function drawGalaxies(intensity) {
+    if (intensity > 0.1) {
+      // Draw telescope observation frame
+      let frameX = 400;
+      let frameY = 300;
+      let frameWidth = 300;
+      let frameHeight = 220;
+      
+      // Telescope frame
+      p.stroke(200, 200, 200, 100 * intensity);
+      p.strokeWeight(3);
+      p.noFill();
+      p.rect(frameX - frameWidth/2, frameY - frameHeight/2, frameWidth, frameHeight, 10);
+      
+      // Crosshairs
+      p.stroke(200, 200, 200, 70 * intensity);
+      p.strokeWeight(1);
+      p.line(frameX - frameWidth/2, frameY, frameX + frameWidth/2, frameY);
+      p.line(frameX, frameY - frameHeight/2, frameX, frameY + frameHeight/2);
+      
+      // Draw spiral galaxy
+      let galaxyX = frameX;
+      let galaxyY = frameY;
+      let galaxySize = 150;
+      
+      p.push();
+      p.translate(galaxyX, galaxyY);
+      p.rotate(time * 0.2);
+      
+      // Galaxy core
+      for (let r = 25; r > 0; r -= 5) {
+        p.fill(255, 220, 150, (30 + r*3) * intensity);
+        p.ellipse(0, 0, r * 2);
+      }
+      
+      // Galaxy arms
+      p.noFill();
+      let arms = 4;
+      for (let arm = 0; arm < arms; arm++) {
+        let armAngle = arm * p.TWO_PI / arms;
+        p.strokeWeight(2);
+        
+        for (let r = 10; r < galaxySize/2; r += 4) {
+          let angle = armAngle + r * 0.03;
+          let x = r * p.cos(angle);
+          let y = r * p.sin(angle);
+          let brightness = p.map(r, 10, galaxySize/2, 200, 50);
+          
+          p.stroke(220, 180, 255, brightness * intensity * (0.5 + 0.5 * p.sin(r * 0.2 + time * 5)));
+          p.point(x, y);
+          
+          // Add some dust around arms
+          if (p.random() > 0.7) {
+            let dustX = x + p.random(-10, 10);
+            let dustY = y + p.random(-10, 10);
+            p.stroke(150, 150, 255, brightness * 0.5 * intensity);
+            p.point(dustX, dustY);
+          }
+        }
+      }
+      p.pop();
+      
+      // Add measurement lines
+      p.stroke(255, 100, 100, 150 * intensity);
+      p.strokeWeight(1);
+      p.line(galaxyX - 85, galaxyY + 80, galaxyX + 85, galaxyY + 80);
+      
+      // Add labels
+      p.fill(255, 255 * intensity);
+      p.textSize(18);
+      p.textAlign(p.CENTER);
+      p.text("Astronomical Observations", frameX, frameY - frameHeight/2 - 20);
+      
+      p.textSize(14);
+      p.text("Red-shifted light from distant galaxies", frameX, frameY + frameHeight/2 + 20);
+    }
+  }
+};
 
-function drawLabels(progress) {
-  // Title appears first
-  if (progress > 0.1) {
-    let titleAlpha = constrain(map(progress, 0.1, 0.2, 0, 255), 0, 255);
-    fill(255, titleAlpha);
-    textSize(28);
-    textAlign(CENTER);
-    text("Fiber Internet Connection", width/2, 100);
-  }
-  
-  // "Reliable Connection" label appears after beam passes first obstacle
-  if (progress > 0.4) {
-    let reliableAlpha = constrain(map(progress, 0.4, 0.5, 0, 255), 0, 255);
-    fill(255, reliableAlpha);
-    textSize(20);
-    textAlign(CENTER);
-    text("Reliable Connection", width/2, 150);
-  }
-  
-  // "Minimal Interference" label appears after beam passes second obstacle
-  if (progress > 0.65) {
-    let minimalAlpha = constrain(map(progress, 0.65, 0.75, 0, 255), 0, 255);
-    fill(255, minimalAlpha);
-    textSize(20);
-    textAlign(CENTER);
-    text("Minimal Interference", width/2, 180);
-  }
-}
+new p5(sketch);
     </script>
   </body>
 </html>

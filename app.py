@@ -28,7 +28,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 migrate = Migrate(app, db)
-CORS(app, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+
 
 # Folders for file uploads and output videos
 app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), "uploads")
@@ -66,19 +67,24 @@ def signup():
     data = request.json or request.form
     username = data.get('username')
     password = data.get('password')
+    email = data.get('email')  # Extract email
 
-    if not username or not password:
-        return jsonify({"error": "Username and password are required."}), 400
+    if not username or not password or not email:
+        return jsonify({"error": "Username, email, and password are required."}), 400
 
     if User.query.filter_by(username=username).first():
         return jsonify({"error": "Username already exists."}), 400
 
+    if User.query.filter_by(email=email).first():
+        return jsonify({"error": "Email already exists."}), 400
+
     hashed_password = generate_password_hash(password)
-    new_user = User(username=username, password=hashed_password)
+    new_user = User(username=username, email=email, password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
 
     return jsonify({"success": True, "message": "Signup successful, please log in."}), 200
+
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -86,15 +92,21 @@ def login():
         return jsonify({"success": True, "message": "Already logged in."}), 200
 
     data = request.json or request.form
-    username = data.get('username')
+    identifier = data.get('username') 
     password = data.get('password')
-    user = User.query.filter_by(username=username).first()
+    
+    # Determine whether to search by email or username
+    if identifier and "@" in identifier:
+        user = User.query.filter_by(email=identifier).first()
+    else:
+        user = User.query.filter_by(username=identifier).first()
     
     if user and check_password_hash(user.password, password):
         login_user(user)
         return jsonify({"success": True, "message": "Logged in successfully."}), 200
     else:
         return jsonify({"error": "Invalid credentials."}), 400
+
 
 @app.route('/logout', methods=['POST'])
 @login_required

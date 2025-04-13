@@ -1,9 +1,10 @@
-// src/components/Login.jsx
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
+const baseUrl = process.env.REACT_APP_API_URL || '';
+
 function Login() {
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -11,11 +12,11 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/login', {
+      const response = await fetch(`${baseUrl}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // to allow cookies/sessions
-        body: JSON.stringify({ username, password }),
+        credentials: 'include',
+        body: JSON.stringify({ username: identifier, password }),
       });
       if (response.ok) {
         navigate('/');
@@ -34,15 +35,15 @@ function Login() {
       {error && <div className="mb-4 text-red-500">{error}</div>}
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label htmlFor="username" className="block text-gray-700 mb-2">
-            Username
+          <label htmlFor="identifier" className="block text-gray-700 mb-2">
+            Username or Email
           </label>
           <input
             type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter your username"
+            id="identifier"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder="Enter your username or email"
             className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           />
@@ -73,7 +74,7 @@ function Login() {
       <p className="text-center mt-4">
         Don't have an account?{' '}
         <Link to="/signup" className="text-blue-500 hover:underline">
-          Sign Up
+          Sign Up here
         </Link>
       </p>
     </div>

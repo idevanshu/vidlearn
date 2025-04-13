@@ -2,7 +2,8 @@ import asyncio
 import base64
 from pathlib import Path
 from jinja2 import Template
-
+import os
+import shutil
 from helper import safe_launch
 
 def generate_html(js_code, output_html_path="temp_render.html"):
@@ -13,9 +14,33 @@ def generate_html(js_code, output_html_path="temp_render.html"):
     Path(output_html_path).write_text(rendered_html, encoding="utf-8")
     return output_html_path
 
+if os.name == "nt":  # Windows
+    possible_paths = [
+        os.getenv("CHROME_PATH"),
+        shutil.which("chrome"),
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+    ]
+    # Select the first path that is not None and exists on disk.
+    CHROME_PATH = next((p for p in possible_paths if p and os.path.exists(p)), None)
+    if not CHROME_PATH:
+        # Fallback: assume "chrome" is in the PATH.
+        CHROME_PATH = "chrome"
+else:
+    # Linux / Unix. Try the common binary names or a default location.
+    CHROME_PATH = (
+        os.getenv("CHROME_PATH") or
+        shutil.which("google-chrome-stable") or
+        shutil.which("google-chrome") or
+        shutil.which("chromium-browser") or
+        shutil.which("chromium") or
+        shutil.which("chrome") or
+        "/usr/bin/google-chrome-stable"
+    )
+
 
 async def record_animation(html_path, segment_id, duration):
-    CHROME_PATH = "C:/Program Files/Google/Chrome/Application/chrome.exe"
+   #CHROME_PATH = "C:/Program Files/Google/Chrome/Application/chrome.exe"
 
     browser = await safe_launch(
         headless=True,
@@ -40,7 +65,7 @@ async def record_animation(html_path, segment_id, duration):
             };
         """)
 
-        print("🎥 Injecting CCapture setup and base64 save logic...")
+        print(" Injecting CCapture setup and base64 save logic...")
 
         await page.evaluate(f"""
             try {{
@@ -64,10 +89,10 @@ async def record_animation(html_path, segment_id, duration):
                             console.log("⏱ Max frames reached: " + frameCount);
                             capturer.stop();
                             capturer.save(function(blob) {{
-                                console.log("💾 capturer.save() called");
+                                console.log(" capturer.save() called");
                                 const reader = new FileReader();
                                 reader.onloadend = function() {{
-                                    console.log("📦 base64 generated");
+                                    console.log(" base64 generated");
                                     const base64Data = reader.result.split(',')[1];
                                     window.blobBase64 = base64Data;
                                 }};
@@ -94,7 +119,7 @@ async def record_animation(html_path, segment_id, duration):
             }}
         """)
 
-        print(f"🕒 Waiting {duration + 5} seconds for animation to complete...")
+        print(f" Waiting {duration + 5} seconds for animation to complete...")
         await asyncio.sleep(duration + 5)
 
         # Wait for blobBase64 to be ready
@@ -119,4 +144,4 @@ async def record_animation(html_path, segment_id, duration):
 
     finally:
         await browser.close()
-        print("🚪 Browser closed")
+        print(" Browser closed")
