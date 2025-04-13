@@ -1,9 +1,11 @@
-// src/components/Signup.jsx
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
+const baseUrl = process.env.REACT_APP_API_URL || '';
+
 function Signup() {
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState(''); // new field for email address
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -11,10 +13,11 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/signup', {
+      const response = await fetch(`${baseUrl}/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        credentials: 'include',
+        body: JSON.stringify({ username, email, password }),
       });
       if (response.ok) {
         navigate('/login');
@@ -42,6 +45,20 @@ function Signup() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Choose a username"
+            className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="email" className="block text-gray-700 mb-2">
+            Email Address
+          </label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Your email address"
             className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           />

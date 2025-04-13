@@ -1,0 +1,45 @@
+server {
+    listen 443 ssl;
+    server_name gyani.mydevweb.xyz;
+
+    root /var/www/gyani.mydevweb.xyz;
+    index index.html;
+
+    # Serve React build
+    location / {
+        try_files $uri /index.html;
+    }
+    
+    location /api/ {
+    rewrite ^/api(/.*)$ $1 break;
+    proxy_pass http://localhost:5000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+
+    # Proxy everything else to Flask backend
+    location ~ ^/(login|signup|logout|generate-video|generate-quiz|download-video|history|progress)$ {
+        proxy_pass http://localhost:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # SSL config (via certbot)
+    ssl_certificate /etc/letsencrypt/live/gyani.mydevweb.xyz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/gyani.mydevweb.xyz/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+
+server {
+    listen 80;
+    server_name gyani.mydevweb.xyz;
+
+    # Redirect HTTP to HTTPS
+    return 301 https://$host$request_uri;
+}

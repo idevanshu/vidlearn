@@ -25,9 +25,6 @@ claude_api = os.getenv("CLAUDE_API_KEY")
 client = OpenAI(api_key=openai_api)
 client_claude = anthropic.Anthropic(api_key=claude_api)
 
-import os
-import shutil
-
 if os.name == "nt":  # Windows
     possible_paths = [
         os.getenv("CHROME_PATH"),

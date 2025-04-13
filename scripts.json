@@ -1,1 +1,50 @@
-[{"id": "segment_001", "voice_script": "Fiber internet uses thin strands of glass or plastic to transmit data as light signals.", "animation": "Show thin cables with light pulses traveling through them against a black background.", "duration": 5}, {"id": "segment_002", "voice_script": "These light signals can travel long distances without losing strength, unlike electric signals.", "animation": "Illustrate light waves traveling along a long path, maintaining consistent brightness.", "duration": 5}, {"id": "segment_003", "voice_script": "Fiber cables have a much higher bandwidth, allowing for faster internet speeds.", "animation": "Show a wide highway with fast-moving vehicles to represent high bandwidth and speed.", "duration": 4}, {"id": "segment_004", "voice_script": "Each fiber optic strand can carry multiple signals using different light wavelengths.", "animation": "Depict multiple colored light beams traveling simultaneously within the same cable.", "duration": 5}, {"id": "segment_005", "voice_script": "Fiber internet provides a more reliable connection with minimal interference.", "animation": "Show a stable, bright light beam overcoming obstacles and maintaining strength.", "duration": 4}]
+[
+    {
+        "id": "segment_001",
+        "voice_script": "Einstein's theory of relativity revolutionized our understanding of space and time.",
+        "animation": "Show a 3D grid representing space, with clock faces embedded, shifting and bending slightly.",
+        "duration": 5
+    },
+    {
+        "id": "segment_002",
+        "voice_script": "It consists of two parts: special relativity and general relativity.",
+        "animation": "Display two distinct boxes labeled 'Special Relativity' and 'General Relativity' floating in space.",
+        "duration": 4
+    },
+    {
+        "id": "segment_003",
+        "voice_script": "Special relativity introduced the idea that the laws of physics are the same for all non-accelerating observers.",
+        "animation": "Illustrate two observers on spaceships moving at constant speeds, looking at a similar physical event.",
+        "duration": 6
+    },
+    {
+        "id": "segment_004",
+        "voice_script": "It also showed that the speed of light is the same for all observers, no matter their relative speed.",
+        "animation": "Display beams of light traveling from a source, reaching two observers in spaceships at different speeds simultaneously.",
+        "duration": 5
+    },
+    {
+        "id": "segment_005",
+        "voice_script": "In special relativity, mass and energy are connected by the equation E equals mc squared.",
+        "animation": "Reveal the famous equation E=mc^2, with an arrow pointing from a piece of paper to a spark of energy.",
+        "duration": 5
+    },
+    {
+        "id": "segment_006",
+        "voice_script": "General relativity expands on this by describing gravity as the warping of space and time.",
+        "animation": "Depict a heavy object like a planet sinking into a stretchy grid, curving it to show gravity.",
+        "duration": 6
+    },
+    {
+        "id": "segment_007",
+        "voice_script": "Objects follow curved paths in this warped space, which we perceive as gravitational attraction.",
+        "animation": "Show a smaller object moving in an orbit around the curved dip of a larger object in the grid.",
+        "duration": 5
+    },
+    {
+        "id": "segment_008",
+        "voice_script": "These ideas have been confirmed through many experiments, helping us understand cosmic phenomena.",
+        "animation": "Display a montage: images of stars bending light, GPS satellites, and astronomical observations.",
+        "duration": 6
+    }
+]
