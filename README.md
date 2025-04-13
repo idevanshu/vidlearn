@@ -36,6 +36,9 @@ Backend Logic	Python (with asyncio + Jinja2)
 
   <h3>📦 Backend Setup (Flask)</h3>
   <pre><code>pip install -r requirements.txt
+flask db init
+flask db migrate -m "Initial migration"
+flask db upgrade
 python app.py</code></pre>
 
   <h3>💻 Frontend Setup (React)</h3>
