@@ -1,0 +1,268 @@
+@import url("https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400..900&display=swap");
+
+:root {
+  --primary-color: #ff7f3e;
+  --white: #fff6e9;
+  --dark-white: #ffecd1;
+  --secondary: #80c4e9;
+  --tertiary: #604cc3;
+}
+
+.menu-icon {
+  font-size: 25px;
+  background: var(--primary-color);
+  padding: 20px;
+  border-radius: 110%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--white);
+  border: none;
+}
+
+.secondary-icon {
+  background: transparent;
+  color: var(--primary-color);
+}
+
+.menu-icon:hover {
+  cursor: pointer;
+}
+
+.tool-row {
+  display: flex;
+  width: 100% !important;
+  max-width: 1200px;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 10vh;
+}
+
+/* -------------------------------------------NAVBAR------------------------------------------- */
+
+.tool-nav {
+  background: var(--dark-white);
+  width: 25vw;
+  max-width: 90vw;
+  height: 100vh;
+  position: fixed;
+  display: flex;
+  flex-flow: column;
+  padding: 20px;
+  gap: 20px;
+  align-items: flex-start;
+  left: -100%;
+  transition: all 0.5s ease-in-out;
+  z-index: 1000;
+  overflow-y: auto;
+  border-right: 1px solid var(--tertiary);
+}
+
+.tool-nav.active {
+  left: 0;
+}
+
+.vid-gallery {
+  display: flex;
+  flex-flow: column;
+  width: 100%;
+  gap: 20px;
+  overflow-y: auto;
+  -ms-overflow-style: none; /* IE & Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.top-box {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+}
+
+.top-box h3 {
+  color: var(--tertiary);
+  font-size: clamp(24px, 5vw, 35px);
+}
+
+.video-tool {
+  width: 100%;
+  border-radius: 10px;
+}
+
+/* -------------------------------------------PROMPTBOX------------------------------------------- */
+
+.tool {
+  gap: 30px;
+  min-height: fit-content;
+  justify-content: flex-start !important;
+  padding: 0 15px;
+}
+
+.tool-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 15px;
+  width: 100%;
+  height: fit-content;
+  margin: 0;
+  left: 0;
+}
+
+.hide {
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.prompt-box {
+  background: var(--dark-white);
+  width: 100%;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-flow: column;
+  gap: 20px;
+  border: 1px solid #ccc;
+}
+
+.prompt-box h3 {
+  font-weight: 500;
+  font-size: clamp(18px, 4vw, 24px);
+  text-align: center;
+}
+
+textarea {
+  max-width: 100%;
+  width: 100%;
+  border: none;
+  font-size: clamp(16px, 3vw, 20px);
+  border-radius: 10px;
+  background: var(--white);
+  border: 1px solid #ccc;
+  padding: 15px;
+  outline: none;
+  height: auto;
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  width: 100%;
+  gap: 20px;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.upload-box {
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  color: #555;
+  background-color: transparent;
+  font-size: clamp(12px, 2vw, 14px);
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+  flex: 1 1 200px;
+}
+
+.upload-box:hover {
+  border-color: #999;
+}
+
+.submit-btn {
+  padding: 15px 25px;
+  font-size: clamp(16px, 3vw, 20px);
+  background: var(--primary-color);
+  border: none;
+  outline: none;
+  color: var(--dark-white);
+  border-radius: 10px;
+  opacity: 0.7;
+  transition: all 0.3s ease-in-out;
+  width: 100%;
+  max-width: 300px;
+}
+
+.submit-btn:hover {
+  cursor: pointer;
+  opacity: 1;
+}
+
+/* -------------------------------------------VIDEOBOX------------------------------------------- */
+
+.video-box {
+  background: var(--dark-white);
+  width: 50%;
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-flow: column;
+  border: 1px solid #ccc;
+  padding: clamp(20px, 5vw, 60px);
+  gap: 20px;
+}
+
+.video-box video {
+  border-radius: 10px;
+  width: 100%;
+  height: 50%;
+}
+
+/* -------------------------------------------RESPONSIVE STYLES------------------------------------------- */
+
+/* Tablet and smaller desktops */
+@media screen and (max-width: 1024px) {
+  .tool-row {
+    width: 100% !important;
+  }
+
+  .tool-nav {
+    width: 280px;
+  }
+}
+
+/* Mobile landscape */
+@media screen and (max-width: 768px) {
+  .tool-header {
+    padding: 15px 10px;
+  }
+
+  .row {
+    flex-direction: column;
+  }
+
+  .upload-box {
+    flex: 1 1 100%;
+  }
+
+  .video-box {
+    padding: 20px;
+  }
+}
+
+/* Mobile portrait */
+@media screen and (max-width: 480px) {
+  .menu-icon {
+    font-size: 20px;
+    padding: 15px;
+  }
+
+  .tool-nav {
+    width: 250px;
+  }
+
+  .prompt-box {
+    padding: 15px;
+  }
+
+  textarea {
+    padding: 10px;
+  }
+
+  .submit-btn {
+    padding: 12px 20px;
+  }
+}
