@@ -47,7 +47,7 @@ npm install
 npm run dev</code></pre>
 
   <h3>🚀 Production Build</h3>
-  <pre><code>cd frontend/sigma-learn
+  <pre><code>cd frontend/vidlearn-frontend-main
 npm run build</code></pre>
 
   <p>Flask will automatically serve the frontend from <code>frontend/build</code>.</p>
