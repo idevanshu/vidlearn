@@ -187,6 +187,36 @@ def generate_video_endpoint():
         app.logger.exception("Exception during video generation:")
         set_progress({"step": "Error", "message": str(e)}, user_id=current_user.id)
         return jsonify({'success': False, 'error': str(e), 'step': 'Unexpected error'}), 500
+    
+
+from flask_login import current_user, login_required
+from werkzeug.utils import secure_filename
+
+@app.route('/upload-pdf', methods=['POST'])
+@login_required
+def upload_pdf():
+    if 'attachment' not in request.files:
+        return jsonify({'error': 'No file part in request.'}), 400
+    file = request.files['attachment']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected.'}), 400
+    if not file.filename.lower().endswith('.pdf'):
+        return jsonify({'error': 'Invalid file type. PDF only.'}), 400
+    filename = secure_filename(file.filename)
+    user_folder = os.path.join(
+        app.config['UPLOAD_FOLDER'],
+        f"{current_user.username}_file"
+    )
+    pdf_folder = os.path.join(user_folder, "pdf")
+    os.makedirs(pdf_folder, exist_ok=True)
+    save_path = os.path.join(pdf_folder, filename)
+    file.save(save_path)
+    return jsonify({
+        'success': True,
+        'filename': filename,
+        'path': save_path
+    }), 200
+
 
 @app.route('/download-video', methods=['GET'])
 @login_required
