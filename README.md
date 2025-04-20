@@ -42,9 +42,9 @@ flask db upgrade
 python app.py</code></pre>
 
   <h3>💻 Frontend Setup (React)</h3>
-  <pre><code>cd frontend/sigma-learn
+  <pre><code>cd frontend/vidlearn-frontend-main
 npm install
-npm start</code></pre>
+npm run dev</code></pre>
 
   <h3>🚀 Production Build</h3>
   <pre><code>cd frontend/sigma-learn
