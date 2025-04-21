@@ -29,3 +29,28 @@ TTS Voice	OpenAI Text-to-Speech API
 Quiz Gen	Gemini 1.5 Pro
 Video Merge	FFmpeg
 Backend Logic	Python (with asyncio + Jinja2)
+
+<body>
+
+  <h2>⚡ Quick Start</h2>
+
+  <h3>📦 Backend Setup (Flask)</h3>
+  <pre><code>pip install -r requirements.txt
+flask db init
+flask db migrate -m "Initial migration"
+flask db upgrade
+python app.py</code></pre>
+
+  <h3>💻 Frontend Setup (React)</h3>
+  <pre><code>cd frontend/vidlearn-frontend-main
+npm install
+npm run dev</code></pre>
+
+  <h3>🚀 Production Build</h3>
+  <pre><code>cd frontend/vidlearn-frontend-main
+npm run build</code></pre>
+
+  <p>Flask will automatically serve the frontend from <code>frontend/build</code>.</p>
+
+</body>
+
