@@ -108,7 +108,25 @@
   left: 0;
 }
 
-.hide {
+.header-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.logout-btn {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  color: var(--primary-color);
+}
+
+.header-row button {
+  height: fit-content;
+}
+
+.header-row .hide {
   opacity: 0;
   transition: opacity 1s ease-in-out;
 }

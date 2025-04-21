@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
 
+import Footer from "../../components/Footer";
+import Logo from "../../components/Logo";
+
 const API = import.meta.env.VITE_API_URL;
 
 function Login() {
@@ -35,28 +38,56 @@ function Login() {
   };
 
   return (
-    <form className="login-form" onSubmit={handleSubmit}>
-      <h2>Login</h2>
-      {error && <p className="error">{error}</p>}
+    <div className="container-wrapper">
+      <div className="gyanai-logo">
+        <a href="/">
+          <Logo />
+        </a>
+      </div>
 
-      <input
-        type="text"
-        placeholder="Username or Email"
-        value={identifier}
-        onChange={(e) => setIdentifier(e.target.value)}
-        required
-      />
-
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-
-      <button type="submit">Login</button>
-    </form>
+      <div className="container login">
+        <div className="illustration">
+          <img src="/loginVector.png" alt="" />
+        </div>
+        <div className="login-form">
+          <form onSubmit={handleSubmit}>
+            <h2 className="login-title">Welcome back</h2>
+            {error && <p className="error">{error}</p>}
+            <div className="form-row">
+              <label htmlFor="username">Username</label>
+              <input
+                type="text"
+                placeholder="Username or Email"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                id="username"
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                id="password"
+                required
+              />
+            </div>
+            <button type="submit" className=" form-row login-btn">
+              Login
+            </button>
+            <div className="form-row">
+              <p>
+                Don't have an account yet? <a href="/signup">Sign Up</a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+      <Footer />
+    </div>
   );
 }
 

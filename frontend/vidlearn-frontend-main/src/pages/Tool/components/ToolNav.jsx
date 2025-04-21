@@ -16,6 +16,7 @@ function ToolNav({ open, handleNav, history }) {
           <ToolVideo key={item.filename} vid={item.url} />
         ))}
       </div>
+      <button className="logout-btn btn">Log Out</button>
     </div>
   );
 }

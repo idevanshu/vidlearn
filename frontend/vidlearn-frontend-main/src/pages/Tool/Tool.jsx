@@ -44,24 +44,23 @@ function Tool() {
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-  
+
     const form = new FormData();
-    form.append('attachment', file);
-  
+    form.append("attachment", file);
+
     const res = await fetch(`${API}/upload-pdf`, {
-      method: 'POST',
-      credentials: 'include',
+      method: "POST",
+      credentials: "include",
       body: form,
     });
     const data = await res.json();
     if (res.ok) {
-      console.log('Uploaded PDF as:', data.filename);
-      setFile(file);       // still keep the file around if you want to send it again
+      console.log("Uploaded PDF as:", data.filename);
+      setFile(file); // still keep the file around if you want to send it again
     } else {
       alert(data.error);
     }
   };
-  
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -13,7 +13,7 @@ function Header({ children }) {
       <div className="header-home">
         <div className="col col-left">
           <div>{children}</div>
-          <Button text="Try It" link={"tool"} />
+          <Button text="Try It" link={"signup"} />
         </div>
         <div className="col">
           <Video></Video>
