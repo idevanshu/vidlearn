@@ -25,325 +25,82 @@
   </head>
   <body>
     <script>
-      let sketch = function(p) {
-  // Initial setup and variables
-  let time = 0;
-  let duration = 6;
-  let maxFrames = duration * 60;
-  let stars = [];
-  let lightRays = [];
-  let satellites = [];
-  let galaxies = [];
-  
-  p.setup = function() {
-    p.createCanvas(800, 600);
-    p.frameRate(60);
-    
-    // Create stars
+      const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 600;
+const FRAME_RATE = 60;
+const SEGMENT_FRAMES = 180;
+const TOTAL_SEGMENTS = 5;
+const TOTAL_FRAMES = SEGMENT_FRAMES * TOTAL_SEGMENTS;
+
+function easeInOutQuad(x) {
+  return x < 0.5 ? 2 * x * x : -1 + (4 - 2 * x) * x;
+}
+
+function setup() {
+  createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+  frameRate(FRAME_RATE);
+  textAlign(CENTER, CENTER);
+  textFont('Arial');
+  noStroke();
+}
+
+function draw() {
+  background(0);
+  let t = frameCount;
+  if (t > TOTAL_FRAMES) {
+    noLoop();
+    return;
+  }
+  let segment = floor(t / SEGMENT_FRAMES);
+  let local = (t % SEGMENT_FRAMES) / SEGMENT_FRAMES;
+  let alpha;
+  if (local < 0.25) {
+    alpha = easeInOutQuad(local * 4) * 255;
+  } else if (local > 0.75) {
+    alpha = easeInOutQuad((1 - local) * 4) * 255;
+  } else {
+    alpha = 255;
+  }
+  fill(255, alpha);
+  if (segment === 0) {
+    textSize(48);
+    text('Thermodynamics', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+  } else if (segment === 1) {
+    textSize(32);
+    text('Zeroth Law: Thermal Equilibrium', CANVAS_WIDTH / 2, 100);
+    let thermHeight = map(local, 0, 1, 0, 200);
+    let x0 = CANVAS_WIDTH / 2 - 20;
+    let y0 = CANVAS_HEIGHT / 2 + 100;
+    fill(255, alpha * 0.5);
+    rect(x0, y0 - 200, 40, 200);
+    fill(255, alpha);
+    rect(x0, y0 - thermHeight, 40, thermHeight);
+  } else if (segment === 2) {
+    textSize(32);
+    text('First Law: ΔU = Q - W', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    let eqAlpha = alpha;
+    fill(255, eqAlpha);
+    textSize(48);
+    text('ΔU = Q - W', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60);
+  } else if (segment === 3) {
+    textSize(32);
+    text('Second Law: Entropy ↑', CANVAS_WIDTH / 2, 100);
     for (let i = 0; i < 100; i++) {
-      stars.push({
-        x: p.random(p.width),
-        y: p.random(p.height),
-        size: p.random(1, 3),
-        brightness: p.random(150, 255)
-      });
+      let angle = noise(i, local * 2) * TWO_PI;
+      let radius = map(i, 0, 100, 20, 200) * local;
+      let x = CANVAS_WIDTH / 2 + cos(angle) * radius;
+      let y = CANVAS_HEIGHT / 2 + sin(angle) * radius;
+      fill(200, 200, 255, alpha * 0.5);
+      ellipse(x, y, 4);
     }
-    
-    // Create light bending rays
-    for (let i = 0; i < 5; i++) {
-      lightRays.push({
-        x: p.random(200, 600),
-        y: p.random(150, 450),
-        length: p.random(80, 150),
-        angle: p.random(p.TWO_PI),
-        bend: p.random(0.2, 0.5)
-      });
-    }
-    
-    // Create satellites
-    for (let i = 0; i < 3; i++) {
-      satellites.push({
-        x: p.random(p.width),
-        y: p.random(150, 250),
-        size: p.random(10, 15),
-        speed: p.random(0.5, 1),
-        orbitRadius: p.random(50, 100),
-        orbitCenterX: p.random(200, 600),
-        orbitCenterY: p.random(200, 400),
-        angle: p.random(p.TWO_PI)
-      });
-    }
-    
-    // Create galaxies for astronomical observations
-    for (let i = 0; i < 2; i++) {
-      galaxies.push({
-        x: p.random(150, 650),
-        y: p.random(150, 450),
-        size: p.random(60, 100),
-        rotation: p.random(p.TWO_PI),
-        arms: p.floor(p.random(3, 6))
-      });
-    }
-  };
-
-  p.draw = function() {
-    p.background(0);
-    time = p.frameCount / maxFrames;
-    
-    // Progress phases based on time
-    let phase1End = 0.33;
-    let phase2End = 0.66;
-    
-    // Calculate current focus
-    let starFocus = 0;
-    let satelliteFocus = 0;
-    let galaxyFocus = 0;
-    
-    if (time < phase1End) {
-      starFocus = p.map(time, 0, phase1End, 0, 1);
-      if (time > phase1End/2) starFocus = p.map(time, phase1End/2, phase1End, 1, 0.3);
-    } else if (time < phase2End) {
-      starFocus = 0.3;
-      satelliteFocus = p.map(time, phase1End, phase2End, 0, 1);
-      if (time > (phase1End + phase2End)/2) satelliteFocus = p.map(time, (phase1End + phase2End)/2, phase2End, 1, 0.3);
-    } else {
-      starFocus = 0.3;
-      satelliteFocus = 0.3;
-      galaxyFocus = p.map(time, phase2End, 1, 0, 1);
-    }
-    
-    // Draw stars and light bending (more visible in first phase)
-    drawStarsAndLightBending(starFocus);
-    
-    // Draw GPS satellites (more visible in second phase)
-    drawSatellites(satelliteFocus);
-    
-    // Draw astronomical observations (more visible in last phase)
-    drawGalaxies(galaxyFocus);
-    
-    // Stop the animation when it reaches the end
-    if (p.frameCount >= maxFrames) {
-      p.noLoop();
-    }
-  };
-  
-  function drawStarsAndLightBending(intensity) {
-    // Draw background stars
-    for (let star of stars) {
-      p.fill(255, star.brightness * 0.3);
-      p.noStroke();
-      p.ellipse(star.x, star.y, star.size);
-    }
-    
-    // Only draw light bending when this part is in focus
-    if (intensity > 0.1) {
-      // Draw a massive star
-      let massiveStarX = 400;
-      let massiveStarY = 250;
-      let glowRadius = 40 + 5 * p.sin(time * 5);
-      
-      // Draw glow
-      for (let r = glowRadius; r > 0; r -= 2) {
-        p.fill(255, 200, 100, 150 * intensity * (r/glowRadius));
-        p.ellipse(massiveStarX, massiveStarY, r);
-      }
-      
-      // Draw core
-      p.fill(255, 240, 200, 255 * intensity);
-      p.ellipse(massiveStarX, massiveStarY, 25);
-      
-      // Draw bending light rays
-      p.strokeWeight(2);
-      for (let i = 0; i < 12; i++) {
-        let angle = i * p.TWO_PI / 12 + time * 0.2;
-        let rayLength = 150 + 20 * p.sin(time * 3 + i);
-        let startX = massiveStarX + p.cos(angle) * 40;
-        let startY = massiveStarY + p.sin(angle) * 40;
-        
-        p.stroke(255, 240, 200, 150 * intensity);
-        p.noFill();
-        p.beginShape();
-        for (let t = 0; t <= 1; t += 0.05) {
-          // Create curved path to simulate light bending
-          let r = 40 + rayLength * t;
-          let bendFactor = 0.2 * (1 - t); // Light bends more near the star
-          let curvedAngle = angle + bendFactor * p.sin(angle * 2);
-          let x = massiveStarX + p.cos(curvedAngle) * r;
-          let y = massiveStarY + p.sin(curvedAngle) * r;
-          p.vertex(x, y);
-        }
-        p.endShape();
-      }
-      
-      // Add "Light Bending" label
-      p.fill(255, 255 * intensity);
-      p.textSize(18);
-      p.textAlign(p.CENTER);
-      p.text("Light Bending around Massive Objects", massiveStarX, massiveStarY + 120);
-    }
+  } else if (segment === 4) {
+    textSize(32);
+    text('Third Law: Absolute Zero Unreachable', CANVAS_WIDTH / 2, 100);
+    let size = map(1 - local, 0, 1, 10, 100);
+    fill(255, alpha);
+    ellipse(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 100, size, size);
   }
-  
-  function drawSatellites(intensity) {
-    if (intensity > 0.1) {
-      // Draw Earth
-      let earthX = 400;
-      let earthY = 380;
-      let earthRadius = 80;
-      
-      // Earth glow
-      for (let r = earthRadius + 10; r > earthRadius; r -= 2) {
-        p.fill(100, 150, 255, 30 * intensity);
-        p.ellipse(earthX, earthY, r * 2);
-      }
-      
-      // Earth
-      p.fill(50, 100, 200, 255 * intensity);
-      p.ellipse(earthX, earthY, earthRadius * 2);
-      
-      // Orbit paths
-      p.noFill();
-      p.stroke(255, 50 * intensity);
-      p.strokeWeight(1);
-      for (let i = 0; i < 3; i++) {
-        let orbitHeight = 130 + i * 30;
-        p.ellipse(earthX, earthY, orbitHeight * 2, orbitHeight * 2);
-      }
-      
-      // Satellites
-      p.strokeWeight(1);
-      for (let i = 0; i < satellites.length; i++) {
-        let sat = satellites[i];
-        
-        // Update satellite position
-        sat.angle += 0.005 * sat.speed;
-        let orbitHeight = 130 + i * 30;
-        let sx = earthX + p.cos(sat.angle) * orbitHeight;
-        let sy = earthY + p.sin(sat.angle) * orbitHeight;
-        
-        // Draw satellite
-        p.push();
-        p.translate(sx, sy);
-        p.rotate(sat.angle + p.PI/2);
-        
-        // Satellite body
-        p.fill(200, 200, 200, 255 * intensity);
-        p.rect(-5, -8, 10, 16);
-        
-        // Solar panels
-        p.fill(70, 130, 230, 255 * intensity);
-        p.rect(-20, -5, 15, 10);
-        p.rect(5, -5, 15, 10);
-        
-        // Antenna
-        p.stroke(200, 200, 200, 255 * intensity);
-        p.line(0, -8, 0, -15);
-        p.noStroke();
-        p.fill(200, 200, 200, 255 * intensity);
-        p.ellipse(0, -15, 3, 3);
-        
-        p.pop();
-        
-        // Signal waves from satellite to Earth
-        p.stroke(255, 100, 100, 100 * intensity * (0.5 + 0.5 * p.sin(time * 10 + i * 2)));
-        p.strokeWeight(1);
-        p.line(sx, sy, earthX, earthY);
-        
-        // Pulsing signal circles
-        let signalPhase = (time * 3 + i * 0.33) % 1;
-        let signalSize = p.map(signalPhase, 0, 1, 0, p.dist(sx, sy, earthX, earthY));
-        p.noFill();
-        p.stroke(255, 100, 100, 100 * intensity * (1 - signalPhase));
-        p.ellipse(sx, sy, signalSize * 2);
-      }
-      
-      // Add "GPS Satellites" label
-      p.fill(255, 255 * intensity);
-      p.textSize(18);
-      p.textAlign(p.CENTER);
-      p.text("GPS Satellites Using Relativity", earthX, earthY - 140);
-    }
-  }
-  
-  function drawGalaxies(intensity) {
-    if (intensity > 0.1) {
-      // Draw telescope observation frame
-      let frameX = 400;
-      let frameY = 300;
-      let frameWidth = 300;
-      let frameHeight = 220;
-      
-      // Telescope frame
-      p.stroke(200, 200, 200, 100 * intensity);
-      p.strokeWeight(3);
-      p.noFill();
-      p.rect(frameX - frameWidth/2, frameY - frameHeight/2, frameWidth, frameHeight, 10);
-      
-      // Crosshairs
-      p.stroke(200, 200, 200, 70 * intensity);
-      p.strokeWeight(1);
-      p.line(frameX - frameWidth/2, frameY, frameX + frameWidth/2, frameY);
-      p.line(frameX, frameY - frameHeight/2, frameX, frameY + frameHeight/2);
-      
-      // Draw spiral galaxy
-      let galaxyX = frameX;
-      let galaxyY = frameY;
-      let galaxySize = 150;
-      
-      p.push();
-      p.translate(galaxyX, galaxyY);
-      p.rotate(time * 0.2);
-      
-      // Galaxy core
-      for (let r = 25; r > 0; r -= 5) {
-        p.fill(255, 220, 150, (30 + r*3) * intensity);
-        p.ellipse(0, 0, r * 2);
-      }
-      
-      // Galaxy arms
-      p.noFill();
-      let arms = 4;
-      for (let arm = 0; arm < arms; arm++) {
-        let armAngle = arm * p.TWO_PI / arms;
-        p.strokeWeight(2);
-        
-        for (let r = 10; r < galaxySize/2; r += 4) {
-          let angle = armAngle + r * 0.03;
-          let x = r * p.cos(angle);
-          let y = r * p.sin(angle);
-          let brightness = p.map(r, 10, galaxySize/2, 200, 50);
-          
-          p.stroke(220, 180, 255, brightness * intensity * (0.5 + 0.5 * p.sin(r * 0.2 + time * 5)));
-          p.point(x, y);
-          
-          // Add some dust around arms
-          if (p.random() > 0.7) {
-            let dustX = x + p.random(-10, 10);
-            let dustY = y + p.random(-10, 10);
-            p.stroke(150, 150, 255, brightness * 0.5 * intensity);
-            p.point(dustX, dustY);
-          }
-        }
-      }
-      p.pop();
-      
-      // Add measurement lines
-      p.stroke(255, 100, 100, 150 * intensity);
-      p.strokeWeight(1);
-      p.line(galaxyX - 85, galaxyY + 80, galaxyX + 85, galaxyY + 80);
-      
-      // Add labels
-      p.fill(255, 255 * intensity);
-      p.textSize(18);
-      p.textAlign(p.CENTER);
-      p.text("Astronomical Observations", frameX, frameY - frameHeight/2 - 20);
-      
-      p.textSize(14);
-      p.text("Red-shifted light from distant galaxies", frameX, frameY + frameHeight/2 + 20);
-    }
-  }
-};
-
-new p5(sketch);
+}
     </script>
   </body>
 </html>
