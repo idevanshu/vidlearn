@@ -1,50 +1,32 @@
 [
-    {
-        "id": "segment_001",
-        "voice_script": "Einstein's theory of relativity revolutionized our understanding of space and time.",
-        "animation": "Show a 3D grid representing space, with clock faces embedded, shifting and bending slightly.",
-        "duration": 5
-    },
-    {
-        "id": "segment_002",
-        "voice_script": "It consists of two parts: special relativity and general relativity.",
-        "animation": "Display two distinct boxes labeled 'Special Relativity' and 'General Relativity' floating in space.",
-        "duration": 4
-    },
-    {
-        "id": "segment_003",
-        "voice_script": "Special relativity introduced the idea that the laws of physics are the same for all non-accelerating observers.",
-        "animation": "Illustrate two observers on spaceships moving at constant speeds, looking at a similar physical event.",
-        "duration": 6
-    },
-    {
-        "id": "segment_004",
-        "voice_script": "It also showed that the speed of light is the same for all observers, no matter their relative speed.",
-        "animation": "Display beams of light traveling from a source, reaching two observers in spaceships at different speeds simultaneously.",
-        "duration": 5
-    },
-    {
-        "id": "segment_005",
-        "voice_script": "In special relativity, mass and energy are connected by the equation E equals mc squared.",
-        "animation": "Reveal the famous equation E=mc^2, with an arrow pointing from a piece of paper to a spark of energy.",
-        "duration": 5
-    },
-    {
-        "id": "segment_006",
-        "voice_script": "General relativity expands on this by describing gravity as the warping of space and time.",
-        "animation": "Depict a heavy object like a planet sinking into a stretchy grid, curving it to show gravity.",
-        "duration": 6
-    },
-    {
-        "id": "segment_007",
-        "voice_script": "Objects follow curved paths in this warped space, which we perceive as gravitational attraction.",
-        "animation": "Show a smaller object moving in an orbit around the curved dip of a larger object in the grid.",
-        "duration": 5
-    },
-    {
-        "id": "segment_008",
-        "voice_script": "These ideas have been confirmed through many experiments, helping us understand cosmic phenomena.",
-        "animation": "Display a montage: images of stars bending light, GPS satellites, and astronomical observations.",
-        "duration": 6
-    }
+  {
+    "id": "segment_001",
+    "voice_script": "Thermodynamics is the study of energy, heat, and work.",
+    "animation": "Start with a black background. Display icons of energy like a flame, heat waves, and a gear representing work. These icons should appear sequentially in the center of the screen, each gently brightening and scaling up slightly to emphasize their significance.",
+    "duration": 4
+  },
+  {
+    "id": "segment_002",
+    "voice_script": "The first law of thermodynamics deals with the conservation of energy.",
+    "animation": "Illustrate a closed loop with an arrow indicating flow, ensuring the loop is vibrant against the black background. Animate the words 'Energy Conservation' appearing above the loop gradually as the loop turns continuously, symbolizing the unending cycle of energy.",
+    "duration": 5
+  },
+  {
+    "id": "segment_003",
+    "voice_script": "The second law states that entropy, or disorder, always increases over time.",
+    "animation": "Show a structured grid of dots which slowly start to scatter randomly across the screen, denoting increasing disorder. Gradually animate the word 'Entropy' appearing larger as the grid becomes more chaotic, synchronized with the voiceover.",
+    "duration": 5
+  },
+  {
+    "id": "segment_004",
+    "voice_script": "The third law of thermodynamics says that as temperature approaches absolute zero, entropy approaches a constant minimum.",
+    "animation": "Display a thermometer icon descending to a labeled 'Absolute Zero' mark at its bottom. As it descends, a bar representing entropy on the side decreases steadily, halting near the bottom with a small constant labeled 'Minimum Entropy'.",
+    "duration": 6
+  },
+  {
+    "id": "segment_005",
+    "voice_script": "Thermodynamics helps in understanding engines, refrigerators, and even the universe.",
+    "animation": "Sequentially show icons of an engine, a refrigerator, and a galaxy, appearing from left to right. They slowly scale up and rotate slightly, emphasizing their connection to thermodynamics. A line links them with the word 'Thermodynamics' above, highlighting the broad application.",
+    "duration": 6
+  }
 ]

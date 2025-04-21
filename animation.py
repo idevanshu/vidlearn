@@ -65,7 +65,7 @@ async def record_animation(html_path, segment_id, duration):
             };
         """)
 
-        print(" Injecting CCapture setup and base64 save logic...")
+        print("🎥 Injecting CCapture setup and base64 save logic...")
 
         await page.evaluate(f"""
             try {{
@@ -89,10 +89,10 @@ async def record_animation(html_path, segment_id, duration):
                             console.log("⏱ Max frames reached: " + frameCount);
                             capturer.stop();
                             capturer.save(function(blob) {{
-                                console.log(" capturer.save() called");
+                                console.log("💾 capturer.save() called");
                                 const reader = new FileReader();
                                 reader.onloadend = function() {{
-                                    console.log(" base64 generated");
+                                    console.log("📦 base64 generated");
                                     const base64Data = reader.result.split(',')[1];
                                     window.blobBase64 = base64Data;
                                 }};
@@ -119,17 +119,17 @@ async def record_animation(html_path, segment_id, duration):
             }}
         """)
 
-        print(f" Waiting {duration + 5} seconds for animation to complete...")
-        await asyncio.sleep(duration + 5)
+        print(f"🕒 Waiting {duration + 10} seconds for animation to complete...")
+        await asyncio.sleep(duration + 10)
 
         # Wait for blobBase64 to be ready
         print("⏳ Waiting for blobBase64 to be set...")
         for i in range(30):  # wait up to ~30 seconds
-            ready = await page.evaluate("typeof window.blobBase64 === 'string' && window.blobBase64.length > 1000")
+            ready = await page.evaluate("typeof window.blobBase64 === 'string' && window.blobBase64.length > 1500") # 1000
             if ready:
                 print("✅ Blob is ready!")
                 break
-            await asyncio.sleep(1)
+            await asyncio.sleep(1.5) # 1
         else:
             raise RuntimeError("❌ Timed out waiting for blob base64.")
 

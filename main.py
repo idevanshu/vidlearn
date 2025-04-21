@@ -50,17 +50,25 @@ else:
     )
 
 print("Using Chrome path:", CHROME_PATH)
-def generate_claude(system_prompt, user_prompt):
-    response = client_claude.messages.create(
-        model="claude-3-7-sonnet-20250219",
-        max_tokens=8000,
-        system=system_prompt,
-        messages=[
-            {"role": "user", "content": user_prompt}
-        ]
+
+# <----------------------Generation Section---------------------->
+
+def generate_response(msg_history, model = "gpt-4o"):
+    response = client.chat.completions.create(
+        model=model,
+        messages=msg_history
     )
-    code = extract_code_from_response(response.content)
-    return code
+    return response.choices[0].message.content
+
+def generate_voice(save_file_path, script):
+    with client.audio.speech.with_streaming_response.create(
+        model="gpt-4o-mini-tts",
+        voice="alloy",
+        input=script
+    ) as response:
+        response.stream_to_file(save_file_path)
+
+# <----------------------Cleaning Section---------------------->
 
 def extract_code_from_response(content):
     # Assuming content is a string or an iterable of blocks:
@@ -71,15 +79,50 @@ def extract_code_from_response(content):
             return block.text
     return None
 
-def generate_response(system_prompt, user_prompt):
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": system_prompt},
+def safe_parse_json(gpt_output):
+    try:
+        if gpt_output.startswith("```json"):
+            gpt_output = gpt_output.strip()[7:-3].strip()
+        elif gpt_output.startswith("```"):
+            gpt_output = gpt_output.strip()[3:-3].strip()
+        return json.loads(gpt_output)
+    except json.JSONDecodeError as e:
+        print("❌ JSON parsing failed:", e)
+        return None
+
+# <----------------------Animation Section---------------------->
+
+def generate_valid_animation_code(prompt, max_attempts=3):
+    past_error = ""
+    msg_history = [
+            {"role": "system", "content": animation_system_prompt},
             {"role": "user", "content": user_prompt}
         ]
-    )
-    return response.choices[0].message.content
+    for attempt in range(1, max_attempts + 1):
+        print(f"🎯 Generating animation code (attempt {attempt})...")
+        set_progress({"step": f"Generating animation code (attempt {attempt})", "message": prompt})
+        clean_code = generate_response(msg_history, model = "o4-mini-2025-04-16")
+        print("Generated code:", clean_code)  # Log the generated code
+        try:
+            is_valid, logs = run_async_safely(validate_code_in_browser(clean_code))
+            print("Validation logs:", logs)  # Log any validation messages
+            past_error = "\n".join(logs) if logs and isinstance(logs, list) else str(logs)
+            print("error: ", past_error)
+        except Exception as e:
+            print(f"⚠️ Validation failed: {e}")
+            is_valid = False
+
+        if is_valid:
+            print("✅ Valid animation code generated.")
+            return clean_code
+        else:
+            msg_history.append({"role": "system", "content":clean_code})
+            msg_history.append({"role":"user", "content":f"the code isnt working and has error: {past_error}. try again to make animation {prompt}"})
+            print("❌ Code invalid or has JS errors. Retrying...")
+            # print(clean_code)
+    # Instead of stopping all generation, we now raise an error that will be caught outside.
+    raise RuntimeError("❌ All attempts to generate valid animation code failed.")
+
 
 async def validate_code_in_browser(js_code):
     # HTML template that loads p5.js and tries to run the animation code
@@ -124,48 +167,6 @@ async def validate_code_in_browser(js_code):
     has_js_error = any("JSERROR:" in log for log in logs)
     return (success and not has_js_error, logs)
 
-def generate_valid_animation_code(prompt, max_attempts=3):
-    past_error = ""
-    for attempt in range(1, max_attempts + 1):
-        print(f"🎯 Generating animation code (attempt {attempt})...")
-        set_progress({"step": f"Generating animation code (attempt {attempt})", "message": prompt})
-        clean_code = generate_claude(animation_system_prompt, f"{prompt}. Dont repeat this error again: {past_error}")
-        print("Generated code:", clean_code)  # Log the generated code
-        try:
-            is_valid, logs = run_async_safely(validate_code_in_browser(clean_code))
-            print("Validation logs:", logs)  # Log any validation messages
-            past_error = "\n".join(logs) if logs and isinstance(logs, list) else str(logs)
-        except Exception as e:
-            print(f"⚠️ Validation failed: {e}")
-            is_valid = False
-
-        if is_valid:
-            print("✅ Valid animation code generated.")
-            return clean_code
-        else:
-            print("❌ Code invalid or has JS errors. Retrying...")
-            print(clean_code)
-    # Instead of stopping all generation, we now raise an error that will be caught outside.
-    raise RuntimeError("❌ All attempts to generate valid animation code failed.")
-
-def generate_voice(save_file_path, script):
-    with client.audio.speech.with_streaming_response.create(
-        model="gpt-4o-mini-tts",
-        voice="alloy",
-        input=script
-    ) as response:
-        response.stream_to_file(save_file_path)
-
-def safe_parse_json(gpt_output):
-    try:
-        if gpt_output.startswith("```json"):
-            gpt_output = gpt_output.strip()[7:-3].strip()
-        elif gpt_output.startswith("```"):
-            gpt_output = gpt_output.strip()[3:-3].strip()
-        return json.loads(gpt_output)
-    except json.JSONDecodeError as e:
-        print("❌ JSON parsing failed:", e)
-        return None
 
 def generate_placeholder_video(segment_id, duration):
     placeholder_video_path = f"segments/{segment_id}.webm"
@@ -184,9 +185,14 @@ def generate_video(user_prompt, output_filename, username):
         clear_folder("segments")
         clear_folder("voice")
 
+        msg_history_voice = [
+            {"role": "system", "content": script_system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+
         # Generate video script from the prompt.
         set_progress({"step": "Generating script", "message": "Using prompt to generate the video script"}, user_id="global")
-        script = generate_response(script_system_prompt, user_prompt)
+        script = generate_response(msg_history_voice)
         script = safe_parse_json(script)
         if not script:
             raise RuntimeError("Script generation returned invalid JSON")
@@ -253,7 +259,7 @@ def generate_video(user_prompt, output_filename, username):
 
 
 if __name__ == "__main__":
-    user_prompt = "explain binary search algorithm in detail using visuals and examples"
+    user_prompt = "explain thermodynamics in short"
     filename_base = "_".join(user_prompt.split()[:10])
     raw_filename = f"{filename_base}.mp4"
     computed_filename = secure_filename(raw_filename)
