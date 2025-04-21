@@ -3,7 +3,7 @@ import React from "react";
 function AboutText() {
   return (
     <div className="about-text">
-      <div className="about-col about-col-left">
+      <div className="about-col about-col-left fancy-font">
         <h2>
           At GyanAI, we harness AI to make high-quality education accessible,
           visual, and interactive for every curious mind.

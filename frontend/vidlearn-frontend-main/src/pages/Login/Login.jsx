@@ -51,7 +51,7 @@ function Login() {
         </div>
         <div className="login-form">
           <form onSubmit={handleSubmit}>
-            <h2 className="login-title">Welcome back</h2>
+            <h2 className="login-title ">Welcome back</h2>
             {error && <p className="error">{error}</p>}
             <div className="form-row">
               <label htmlFor="username">Username</label>
