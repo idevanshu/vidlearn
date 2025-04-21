@@ -5,6 +5,8 @@ import ToolHeader from "./components/ToolHeader";
 import VideoBox from "./components/VideoBox";
 import "./Tool.css";
 
+import { PacmanLoader } from "react-spinners";
+
 const API = import.meta.env.VITE_API_URL;
 
 function Tool() {
@@ -104,7 +106,7 @@ function Tool() {
         <div className="container tool">
           <ToolHeader open={open} handleNav={handleNav} />
           <div className="tool-row" style={{ justifyContent: "center" }}>
-            <h1>Generate an educational video</h1>
+            <h1 className="fancy-font">Generate an educational video</h1>
           </div>
           <PromptBox
             prompt={prompt}
@@ -114,13 +116,32 @@ function Tool() {
             loading={loading}
           />
           {videoUrl && (
+            <div className="tool-row">
+              <h2>Generated Video:</h2>
+            </div>
+          )}
+          {loading ? (
             <>
               <div className="tool-row">
-                <h2>Generated Video:</h2>
+                <h2>Generating Video:</h2>
               </div>
-              <VideoBox videoUrl={videoUrl} />
+
+              <PacmanLoader color="#ff7f3e" />
+              <h2
+                style={{
+                  color: "#604cc3",
+                  textAlign: "center",
+                  fontSize: "25px",
+                }}
+              >
+                Pac-Man is chomping frames… your video will be ready shortly!
+              </h2>
             </>
+          ) : (
+            ""
           )}
+
+          {videoUrl && <VideoBox videoUrl={videoUrl} loading={loading} />}
         </div>
       </div>
     </>

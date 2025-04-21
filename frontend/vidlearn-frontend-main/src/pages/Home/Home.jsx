@@ -9,7 +9,9 @@ function Home() {
   return (
     <div className="container-wrapper">
       <Header>
-        <h1>Effortless creation of educational videos with AI</h1>
+        <h1 className="fancy-font">
+          Effortless creation of educational videos with AI
+        </h1>
         <br />
         <p>
           Simply provide a topic and let GyanAI create an animated video with

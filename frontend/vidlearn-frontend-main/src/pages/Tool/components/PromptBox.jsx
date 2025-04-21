@@ -1,6 +1,12 @@
 import React, { useRef, useEffect } from "react";
 
-function PromptBox({ prompt, handleChange, handleFileUpload, handleSubmit, loading }) {
+function PromptBox({
+  prompt,
+  handleChange,
+  handleFileUpload,
+  handleSubmit,
+  loading,
+}) {
   const inputRef = useRef(null);
   const ref = useRef();
 
