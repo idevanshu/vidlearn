@@ -96,7 +96,7 @@ def generate_valid_animation_code(prompt, max_attempts=3):
     past_error = ""
     msg_history = [
             {"role": "system", "content": animation_system_prompt},
-            {"role": "user", "content": user_prompt}
+            {"role": "user", "content": prompt}
         ]
     for attempt in range(1, max_attempts + 1):
         print(f"🎯 Generating animation code (attempt {attempt})...")
