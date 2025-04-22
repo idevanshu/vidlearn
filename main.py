@@ -76,6 +76,8 @@ def generate_voice(save_file_path, script):
 
 # <--------------------------------------------Cleaning Section-------------------------------------------->
 
+def safe_text(text):
+    return text.encode("utf-8", errors="replace").decode("utf-8")
 
 
 def extract_code_from_response(content):
@@ -111,7 +113,7 @@ def generate_valid_animation_code(prompt, max_attempts=3):
             {"role": "user", "content": prompt}
         ]
     for attempt in range(1, max_attempts + 1):
-        print(f"🎯 Generating animation code (attempt {attempt})...")
+        print(f" Generating animation code (attempt {attempt})...")
         set_progress({"step": f"Generating animation code (attempt {attempt})", "message": prompt})
         clean_code = generate_response(msg_history, model = "o4-mini-2025-04-16")
         # print("Generated code:", clean_code)  # Log the generated code
@@ -180,11 +182,7 @@ async def validate_code_in_browser(js_code):
     return (success and not has_js_error, logs)
 
 
-
-
 # <--------------------------------------------Vid Generation Section-------------------------------------------->
-
-
 
 
 def generate_placeholder_video(segment_id, duration):
@@ -209,8 +207,6 @@ def generate_video(user_prompt, output_filename, username):
             {"role": "system", "content": script_system_prompt},
             {"role": "user", "content": user_prompt}
         ]
-
-
 
         # Generate video script from the prompt.
         set_progress({"step": "Generating script", "message": "Using prompt to generate the video script"}, user_id="global")
@@ -273,7 +269,7 @@ def generate_video(user_prompt, output_filename, username):
                 {"role":"user", "content":voiceover}
             ]
             pdf_content = generate_response(msg_history_pdf)
-
+            pdf_content = safe_text(pdf_content)
             segment_img_path = extract_last_frame(f"segments/{segment_id}.webm" , f"pdf_images/{segment_id}.png")
 
             notes_list.append({"id":segment_id , "notes":pdf_content , "image_path":segment_img_path})
@@ -301,8 +297,32 @@ def generate_video(user_prompt, output_filename, username):
 
 
 if __name__ == "__main__":
-    user_prompt = "explain thermodynamics in short minimum duration of video: 15 seconds"
-    filename_base = "_".join(user_prompt.split()[:10])
-    raw_filename = f"{filename_base}.mp4"
-    computed_filename = secure_filename(raw_filename)
-    generate_video(user_prompt, computed_filename, username="dev")
+    # user_prompt = "explain thermodynamics in short minimum duration of video: 15 seconds"
+    # filename_base = "_".join(user_prompt.split()[:10])
+    # raw_filename = f"{filename_base}.mp4"
+    # computed_filename = secure_filename(raw_filename)
+    # generate_video(user_prompt, computed_filename, username="dev")
+    with open("scripts.json") as f:
+        script = json.load(f)
+
+    notes_list = []
+    for segment in script:
+        segment_id = segment["id"]
+        voiceover = segment["voice_script"]
+
+        msg_history_pdf = [
+                {"role": "system", "content": pdf_system_prompt},
+                {"role":"user", "content":voiceover}
+            ]
+
+        pdf_content = generate_response(msg_history_pdf)
+        pdf_content = safe_text(pdf_content)
+
+        segment_img_path = f"pdf_images/{segment_id}.png"
+
+        notes_list.append({"id":segment_id , "notes":pdf_content , "image_path":segment_img_path})
+
+        print(f"PDF segment:{segment_id} added to notes_list")
+
+    generate_pdf(notes_list) # PDF Generation
+    print("PDF made")
