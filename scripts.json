@@ -1,1 +1,44 @@
-[{"id": "segment_001", "voice_script": "Chess is a strategic board game for two players.", "animation": "Start with a black background. Display a top-view chessboard appearing at the center, with classic arrangement of pieces for two players, showing a full set as the narrator finishes speaking.", "duration": 4}, {"id": "segment_002", "voice_script": "The objective is to checkmate the opponent's king.", "animation": "Focus on a king piece at the center of the chessboard. Animate a sequence where a queen and a rook from the opposite side smoothly move across the board, cornering the king, symbolizing a checkmate.", "duration": 5}, {"id": "segment_003", "voice_script": "Each type of piece moves differently on the board.", "animation": "Highlight a knight, bishop, and rook in sequence. For each piece, radiate arrows from the piece, depicting allowed movement patterns: L-shaped for the knight, diagonal for the bishop, and orthogonal for the rook.", "duration": 6}, {"id": "segment_004", "voice_script": "Chess improves strategic thinking and problem-solving skills.", "animation": "Display animated thought bubbles above a pawn showcasing gears turning inside, symbolizing strategic thinking. Transition to show victory symbols like a trophy with a rising thumbs-up gesture.", "duration": 5}]
+[
+  {
+    "id": "segment_001",
+    "voice_script": "Newton's First Law of Motion is about inertia.",
+    "animation": "Start with the text 'Newton's First Law of Motion' appearing on the screen. Then transition to a large, stationary object like a boulder resting on a flat plane.",
+    "duration": 6
+  },
+  {
+    "id": "segment_002",
+    "voice_script": "It states that an object at rest stays at rest.",
+    "animation": "Show the boulder from the previous scene. Slowly zoom out to emphasize its stillness, as the word 'Rest' appears above.",
+    "duration": 7
+  },
+  {
+    "id": "segment_003",
+    "voice_script": "Unless acted upon by an external force.",
+    "animation": "Introduce an arrow entering the frame, pushing the boulder. Animate the boulder slowly beginning to move in response to the force.",
+    "duration": 6
+  },
+  {
+    "id": "segment_004",
+    "voice_script": "Similarly, an object in motion stays in motion.",
+    "animation": "Transition to a scene with a ball smoothly rolling across a flat plane. The word 'Motion' appears above it.",
+    "duration": 7
+  },
+  {
+    "id": "segment_005",
+    "voice_script": "Again, unless an external force acts on it.",
+    "animation": "Show the ball rolling until it hits a small obstacle. Upon contact, the ball slows down and eventually stops.",
+    "duration": 7
+  },
+  {
+    "id": "segment_006",
+    "voice_script": "This behavior is due to inertia, a property of matter.",
+    "animation": "Illustrate a simple diagram showing 'Inertia' through a visual metaphor of mass and resistance to changes in motion.",
+    "duration": 7
+  },
+  {
+    "id": "segment_007",
+    "voice_script": "The more mass an object has, the more inertia it possesses.",
+    "animation": "Show two objects, a large stone and a small pebble. Apply the same force with arrows, showing the large stone barely moves while the pebble rolls away quickly.",
+    "duration": 8
+  }
+]

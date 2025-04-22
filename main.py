@@ -20,10 +20,8 @@ load_dotenv()
 
 # API keys from env variables
 openai_api = os.getenv("OPENAI_API_KEY")
-claude_api = os.getenv("CLAUDE_API_KEY")
 
 client = OpenAI(api_key=openai_api)
-client_claude = anthropic.Anthropic(api_key=claude_api)
 
 if os.name == "nt":  # Windows
     possible_paths = [
@@ -102,7 +100,7 @@ def generate_valid_animation_code(prompt, max_attempts=3):
         print(f"🎯 Generating animation code (attempt {attempt})...")
         set_progress({"step": f"Generating animation code (attempt {attempt})", "message": prompt})
         clean_code = generate_response(msg_history, model = "o4-mini-2025-04-16")
-        print("Generated code:", clean_code)  # Log the generated code
+        # print("Generated code:", clean_code)  # Log the generated code
         try:
             is_valid, logs = run_async_safely(validate_code_in_browser(clean_code))
             print("Validation logs:", logs)  # Log any validation messages
@@ -185,14 +183,14 @@ def generate_video(user_prompt, output_filename, username):
         clear_folder("segments")
         clear_folder("voice")
 
-        msg_history_voice = [
+        msg_history_script = [
             {"role": "system", "content": script_system_prompt},
             {"role": "user", "content": user_prompt}
         ]
 
         # Generate video script from the prompt.
         set_progress({"step": "Generating script", "message": "Using prompt to generate the video script"}, user_id="global")
-        script = generate_response(msg_history_voice)
+        script = generate_response(msg_history_script)
         script = safe_parse_json(script)
         if not script:
             raise RuntimeError("Script generation returned invalid JSON")
