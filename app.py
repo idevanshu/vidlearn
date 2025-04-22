@@ -235,6 +235,22 @@ def download_video():
         app.logger.error("File not found: %s", output_path)
         return jsonify({'error': 'File not found.'}), 404
 
+@app.route('/download-pdf', methods=['GET'])
+@login_required
+def download_pdf():
+    # where you save it in your generate_video() flow:
+    user_output_folder = os.path.join(OUTPUT_FOLDER, f"{current_user.username}_output")
+    pdf_path = os.path.join(user_output_folder, "notes.pdf")
+
+    if os.path.exists(pdf_path):
+        # as_attachment=True tells the browser to download it
+        return send_file(pdf_path,
+                         mimetype='application/pdf',
+                         as_attachment=True,
+                         download_name='study_notes.pdf')
+    else:
+        return jsonify({'error': 'PDF not found'}), 404
+
 @app.route('/generate-quiz', methods=['POST'])
 @login_required
 def generate_quiz_endpoint():
