@@ -1,44 +1,14 @@
 [
   {
     "id": "segment_001",
-    "voice_script": "Newton's First Law of Motion is about inertia.",
-    "animation": "Start with the text 'Newton's First Law of Motion' appearing on the screen. Then transition to a large, stationary object like a boulder resting on a flat plane.",
-    "duration": 6
+    "voice_script": "Thermodynamics is the study of heat, energy, and the work they do in physical systems. It helps us understand how energy transforms from one form to another.",
+    "animation": "Begin with a glowing ball of energy centered on a black background. Animate it transforming into various forms like a lit bulb, moving gears, and a flowing waterfall, symbolizing different energy transformations.",
+    "duration": 7
   },
   {
     "id": "segment_002",
-    "voice_script": "It states that an object at rest stays at rest.",
-    "animation": "Show the boulder from the previous scene. Slowly zoom out to emphasize its stillness, as the word 'Rest' appears above.",
-    "duration": 7
-  },
-  {
-    "id": "segment_003",
-    "voice_script": "Unless acted upon by an external force.",
-    "animation": "Introduce an arrow entering the frame, pushing the boulder. Animate the boulder slowly beginning to move in response to the force.",
-    "duration": 6
-  },
-  {
-    "id": "segment_004",
-    "voice_script": "Similarly, an object in motion stays in motion.",
-    "animation": "Transition to a scene with a ball smoothly rolling across a flat plane. The word 'Motion' appears above it.",
-    "duration": 7
-  },
-  {
-    "id": "segment_005",
-    "voice_script": "Again, unless an external force acts on it.",
-    "animation": "Show the ball rolling until it hits a small obstacle. Upon contact, the ball slows down and eventually stops.",
-    "duration": 7
-  },
-  {
-    "id": "segment_006",
-    "voice_script": "This behavior is due to inertia, a property of matter.",
-    "animation": "Illustrate a simple diagram showing 'Inertia' through a visual metaphor of mass and resistance to changes in motion.",
-    "duration": 7
-  },
-  {
-    "id": "segment_007",
-    "voice_script": "The more mass an object has, the more inertia it possesses.",
-    "animation": "Show two objects, a large stone and a small pebble. Apply the same force with arrows, showing the large stone barely moves while the pebble rolls away quickly.",
+    "voice_script": "One of the key concepts is the conservation of energy, which states that energy cannot be created or destroyed, only transformed.",
+    "animation": "Show energy flowing in an endless loop cycle: a rotating arrow that morphs into different energy symbols, illustrating the idea of conservation and transformation.",
     "duration": 8
   }
 ]

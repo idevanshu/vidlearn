@@ -103,7 +103,7 @@ input[type="range"].slider::-moz-range-track {
 
 .vid-gallery {
   display: flex;
-  flex-flow: column;
+  flex-flow: column-reverse;
   width: 100%;
   gap: 20px;
   overflow-y: auto;

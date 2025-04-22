@@ -2,6 +2,7 @@
 .env*
 output/
 segments/
+pdf_images/
 migrations/
 instance/
 final_videos/

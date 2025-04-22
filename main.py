@@ -9,12 +9,14 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 import shutil
-from prompts import script_system_prompt, animation_system_prompt
+from prompts import script_system_prompt, animation_system_prompt, pdf_system_prompt
 from video import merge_with_ffmpeg, merge_videos
 from animation import generate_html, record_animation
 from helper import safe_launch, clear_folder, run_async_safely
 from progress import set_progress  # using our shared progress module
 import shutil
+
+from pdf import extract_last_frame, generate_pdf
 
 load_dotenv()
 
@@ -49,7 +51,11 @@ else:
 
 print("Using Chrome path:", CHROME_PATH)
 
-# <----------------------Generation Section---------------------->
+
+
+# <--------------------------------------------Generation Section-------------------------------------------->
+
+
 
 def generate_response(msg_history, model = "gpt-4o"):
     response = client.chat.completions.create(
@@ -66,7 +72,11 @@ def generate_voice(save_file_path, script):
     ) as response:
         response.stream_to_file(save_file_path)
 
-# <----------------------Cleaning Section---------------------->
+
+
+# <--------------------------------------------Cleaning Section-------------------------------------------->
+
+
 
 def extract_code_from_response(content):
     # Assuming content is a string or an iterable of blocks:
@@ -88,7 +98,11 @@ def safe_parse_json(gpt_output):
         print("❌ JSON parsing failed:", e)
         return None
 
-# <----------------------Animation Section---------------------->
+
+
+# <--------------------------------------------Animation Section-------------------------------------------->
+
+
 
 def generate_valid_animation_code(prompt, max_attempts=3):
     past_error = ""
@@ -166,6 +180,13 @@ async def validate_code_in_browser(js_code):
     return (success and not has_js_error, logs)
 
 
+
+
+# <--------------------------------------------Vid Generation Section-------------------------------------------->
+
+
+
+
 def generate_placeholder_video(segment_id, duration):
     placeholder_video_path = f"segments/{segment_id}.webm"
     cmd = (
@@ -182,11 +203,14 @@ def generate_video(user_prompt, output_filename, username):
         clear_folder("final_videos")
         clear_folder("segments")
         clear_folder("voice")
+        clear_folder("pdf_images")
 
         msg_history_script = [
             {"role": "system", "content": script_system_prompt},
             {"role": "user", "content": user_prompt}
         ]
+
+
 
         # Generate video script from the prompt.
         set_progress({"step": "Generating script", "message": "Using prompt to generate the video script"}, user_id="global")
@@ -198,6 +222,8 @@ def generate_video(user_prompt, output_filename, username):
             json.dump(script, f)
 
         set_progress({"step": "Script generated", "message": "Proceeding to segment processing"}, user_id="global")
+
+        notes_list = [] #used for making pdf notes at end
 
         # Process each segment.
         for segment in script:
@@ -241,12 +267,30 @@ def generate_video(user_prompt, output_filename, username):
             merge_with_ffmpeg(f"segments/{segment_id}.webm", f"voice/{segment_id}.mp3", f"final_videos/{segment_id}.mp4")
             print("Done with segment:", segment_id)
 
+            # <--------------------------------------------PDF Generation Section-------------------------------------------->
+            msg_history_pdf = [
+                {"role": "system", "content": pdf_system_prompt},
+                {"role":"user", "content":voiceover}
+            ]
+            pdf_content = generate_response(msg_history_pdf)
+
+            segment_img_path = extract_last_frame(f"segments/{segment_id}.webm" , f"pdf_images/{segment_id}.png")
+
+            notes_list.append({"id":segment_id , "notes":pdf_content , "image_path":segment_img_path})
+
+            print(f"PDF segment:{segment_id} added to notes_list")
+
         set_progress({"step": "Merging final video", "message": "Merging all segments into one video"}, user_id="global")
         # Save the final video to a user-specific folder.
         user_output_folder = os.path.join("output", f"{username}_output")
         os.makedirs(user_output_folder, exist_ok=True)
         final_output_path = os.path.join(user_output_folder, output_filename)
         merge_videos("final_videos", final_output_path)
+        
+        pdf_filename = os.path.join(user_output_folder, "notes.pdf")
+        if os.path.exists(pdf_filename): os.remove(pdf_filename)
+        generate_pdf(notes_list, pdf_filename) # PDF Generation
+        print("PDF made")
 
         set_progress({"step": "Completed", "message": "Video generation completed"}, user_id="global")
         return True
@@ -257,7 +301,7 @@ def generate_video(user_prompt, output_filename, username):
 
 
 if __name__ == "__main__":
-    user_prompt = "explain thermodynamics in short"
+    user_prompt = "explain thermodynamics in short minimum duration of video: 15 seconds"
     filename_base = "_".join(user_prompt.split()[:10])
     raw_filename = f"{filename_base}.mp4"
     computed_filename = secure_filename(raw_filename)
