@@ -16,6 +16,7 @@ function Tool() {
   const [loading, setLoading] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [history, setHistory] = useState([]);
+  const [timeValue, setTimeValue] = useState(1);
 
   // fetch past generations on mount
   useEffect(() => {
@@ -41,6 +42,11 @@ function Tool() {
 
   const handleChange = (e) => {
     setPrompt(e.target.value);
+  };
+
+  const handleSliderChange = (e) => {
+    const value = parseInt(e.target.value, 10);
+    setTimeValue(value);
   };
 
   const handleFileUpload = async (e) => {
@@ -70,7 +76,8 @@ function Tool() {
 
     setLoading(true);
     const form = new FormData();
-    form.append("prompt", prompt);
+    const refined_prompt = `${prompt}. minimum duration of video: ${timeValue} minutes `;
+    form.append("prompt", refined_prompt);
     if (file) form.append("attachment", file);
 
     try {
@@ -85,7 +92,7 @@ function Tool() {
         setVideoUrl(url);
         // prepend to history
         setHistory((prev) => [
-          { filename: data.filename, url, prompt_text: prompt },
+          { filename: data.filename, url, prompt_text: refined_prompt },
           ...prev,
         ]);
       } else {
@@ -114,8 +121,10 @@ function Tool() {
             handleFileUpload={handleFileUpload}
             handleSubmit={handleSubmit}
             loading={loading}
+            timeValue={timeValue}
+            handleSliderChange={handleSliderChange}
           />
-          {videoUrl && (
+          {videoUrl && !loading && (
             <div className="tool-row">
               <h2>Generated Video:</h2>
             </div>
@@ -141,7 +150,7 @@ function Tool() {
             ""
           )}
 
-          {videoUrl && <VideoBox videoUrl={videoUrl} loading={loading} />}
+          {videoUrl && !loading && <VideoBox videoUrl={videoUrl} />}
         </div>
       </div>
     </>

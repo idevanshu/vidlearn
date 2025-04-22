@@ -6,6 +6,8 @@ function PromptBox({
   handleFileUpload,
   handleSubmit,
   loading,
+  timeValue,
+  handleSliderChange,
 }) {
   const inputRef = useRef(null);
   const ref = useRef();
@@ -40,6 +42,20 @@ function PromptBox({
         onInput={adjust}
         ref={ref}
       />
+
+      <div className="row">
+        <label htmlFor="time-slider">Video Length: {timeValue} mins</label>
+        <input
+          type="range"
+          id="time-slider"
+          min="1"
+          max="10"
+          step="1"
+          value={timeValue}
+          onChange={handleSliderChange}
+          className="slider"
+        />
+      </div>
 
       <div className="row">
         <div

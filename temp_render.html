@@ -25,80 +25,73 @@
   </head>
   <body>
     <script>
-      const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 600;
-const FRAME_RATE = 60;
-const SEGMENT_FRAMES = 180;
-const TOTAL_SEGMENTS = 5;
-const TOTAL_FRAMES = SEGMENT_FRAMES * TOTAL_SEGMENTS;
+      let CUSTOM_BG = 0;
+let STONE_COLOR = 150;
+let PEBBLE_COLOR = 220;
+let TEXT_COLOR = 255;
+let ARROW_COLOR = {r:100, g:200, b:255};
 
-function easeInOutQuad(x) {
-  return x < 0.5 ? 2 * x * x : -1 + (4 - 2 * x) * x;
-}
+let largeR = 50;
+let smallR = 20;
+let yGround = 580;
+let startFrame = 0;
 
 function setup() {
-  createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-  frameRate(FRAME_RATE);
+  createCanvas(800, 600);
+  frameRate(60);
   textAlign(CENTER, CENTER);
-  textFont('Arial');
-  noStroke();
+  textSize(24);
 }
 
 function draw() {
-  background(0);
-  let t = frameCount;
-  if (t > TOTAL_FRAMES) {
+  background(CUSTOM_BG);
+  let fc = frameCount;
+  // ground
+  stroke(255);
+  strokeWeight(2);
+  line(0, yGround, width, yGround);
+  // narration text
+  if (fc <= 180) {
+    noStroke();
+    fill(TEXT_COLOR);
+    text("The more mass an object has, the more inertia it possesses.", width/2, 100);
+  }
+  // motion progress
+  let x1 = 200;
+  let x2 = 200;
+  if (fc >= 120) {
+    let t = constrain((fc - 120) / 360, 0, 1);
+    let e = t * t;
+    x1 += e * 100;
+    x2 += e * 400;
+  }
+  let y1 = yGround - largeR;
+  let y2 = yGround - smallR;
+  // stone
+  noStroke();
+  fill(STONE_COLOR);
+  ellipse(x1, y1, largeR * 2, largeR * 2);
+  // pebble
+  fill(PEBBLE_COLOR);
+  ellipse(x2, y2, smallR * 2, smallR * 2);
+  // force arrows
+  if (fc >= 120) {
+    let aAlpha = constrain(map(fc, 120, 150, 0, 200), 0, 200);
+    stroke(ARROW_COLOR.r, ARROW_COLOR.g, ARROW_COLOR.b, aAlpha);
+    strokeWeight(4);
+    // stone arrow
+    let sx1 = x1 - 30, sy1 = y1, sx2 = x1 + largeR + 20, sy2 = y1;
+    line(sx1, sy1, sx2, sy2);
+    line(sx2, sy2, sx2 - 10, sy2 - 7);
+    line(sx2, sy2, sx2 - 10, sy2 + 7);
+    // pebble arrow
+    let px1 = x2 - 30, py1 = y2, px2 = x2 + smallR + 20, py2 = y2;
+    line(px1, py1, px2, py2);
+    line(px2, py2, px2 - 10, py2 - 7);
+    line(px2, py2, px2 - 10, py2 + 7);
+  }
+  if (fc > 500) {
     noLoop();
-    return;
-  }
-  let segment = floor(t / SEGMENT_FRAMES);
-  let local = (t % SEGMENT_FRAMES) / SEGMENT_FRAMES;
-  let alpha;
-  if (local < 0.25) {
-    alpha = easeInOutQuad(local * 4) * 255;
-  } else if (local > 0.75) {
-    alpha = easeInOutQuad((1 - local) * 4) * 255;
-  } else {
-    alpha = 255;
-  }
-  fill(255, alpha);
-  if (segment === 0) {
-    textSize(48);
-    text('Thermodynamics', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-  } else if (segment === 1) {
-    textSize(32);
-    text('Zeroth Law: Thermal Equilibrium', CANVAS_WIDTH / 2, 100);
-    let thermHeight = map(local, 0, 1, 0, 200);
-    let x0 = CANVAS_WIDTH / 2 - 20;
-    let y0 = CANVAS_HEIGHT / 2 + 100;
-    fill(255, alpha * 0.5);
-    rect(x0, y0 - 200, 40, 200);
-    fill(255, alpha);
-    rect(x0, y0 - thermHeight, 40, thermHeight);
-  } else if (segment === 2) {
-    textSize(32);
-    text('First Law: ΔU = Q - W', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-    let eqAlpha = alpha;
-    fill(255, eqAlpha);
-    textSize(48);
-    text('ΔU = Q - W', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60);
-  } else if (segment === 3) {
-    textSize(32);
-    text('Second Law: Entropy ↑', CANVAS_WIDTH / 2, 100);
-    for (let i = 0; i < 100; i++) {
-      let angle = noise(i, local * 2) * TWO_PI;
-      let radius = map(i, 0, 100, 20, 200) * local;
-      let x = CANVAS_WIDTH / 2 + cos(angle) * radius;
-      let y = CANVAS_HEIGHT / 2 + sin(angle) * radius;
-      fill(200, 200, 255, alpha * 0.5);
-      ellipse(x, y, 4);
-    }
-  } else if (segment === 4) {
-    textSize(32);
-    text('Third Law: Absolute Zero Unreachable', CANVAS_WIDTH / 2, 100);
-    let size = map(1 - local, 0, 1, 10, 100);
-    fill(255, alpha);
-    ellipse(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 100, size, size);
   }
 }
     </script>

@@ -38,6 +38,45 @@
   min-height: 10vh;
 }
 
+/* SLIDER */
+input[type="range"].slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--primary-color);
+  width: 100%;
+  height: 8px;
+  border-radius: 5px;
+  outline: none;
+}
+
+input[type="range"].slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--white);
+  cursor: pointer;
+  border: 2px solid var(--tertiary);
+}
+
+/* For Firefox compatibility */
+input[type="range"].slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--white);
+  cursor: pointer;
+  border: 2px solid var(--tertiary);
+}
+
+/* For the track in Firefox */
+input[type="range"].slider::-moz-range-track {
+  background: var(--primary-color);
+  height: 8px;
+  border-radius: 5px;
+}
+
 /* -------------------------------------------NAVBAR------------------------------------------- */
 
 .tool-nav {
